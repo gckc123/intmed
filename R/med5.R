@@ -1,15 +1,24 @@
-#using the paralle packages for multicore computation
-library(stringr)
-library(MASS)
-library(tidyverse)
-library(mediation)
-library(parallel)
-library(mice)
-library(doParallel)
-library(rmarkdown)
+#' Estimating the mediation analysis based on the interventional effect
+#'
+#' @param y The outcome variable.
+#' @param med A vector of the mediators.
+#' @param treat The exposure variable.
+#' @param mod A vector of moderators for moderated mediation analysis - Not yet implemented.
+#' @param c A vector of covariates.
+#' @param ymodel A character string specifying the outcome model. Current options are "regression" (for continuous variable), "logistic regression" (for binary variable), and "poisson regression" (for count variable)
+#' @param mmodel A vector of character string specifying the mediator models. Current options are "regression" (for continuous variable), "logistic regression" (for binary variable), and "poisson regression" (for count variable)
+#' @param treat_lv Value of the treatment variable used as the treatment condition. Default is 1.
+#' @param contron_lv Value of the treatment variable used as the control condition. Default is 0.
+#' @param incint A vector of boolean specifying if the exposure-mediator interactions are included into the outcome model. Default is NULL.
+#' @param inc_mmint A boolean value specifying if the mediator-mediator interactions are included. Default is FALSE.
+#' @param data A data frame containing all the analysis variables.
+#' @param sim A numerical value specifying the number of simulation. Default is 1000.
+#' @param conf.level A numerical value specifying the confidence interval the the estimates. Default is 0.95
+#' @param out_scale A string specifying the scale of the analysis. Only difference scale is implemented.
+#' @param complete_analysis Multiple imputation will be used to fill in missing value. Setting this flag to FALSE will force the analysis to be conducted on complete data.
 
-#If there is missing data, perform multiple imputation beforehand.
-mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data, sim = 1000, conf.level = 0.95, out_scale = "difference", complete_analysis = FALSE) {
+
+mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, out_scale = "difference", complete_analysis = FALSE) {
   y_modelformula <- build_ymodel_formula(y, med = med, treat = treat, ymodel = ymodel, data = data, c = c, mod = mod, incint = incint, inc_mmint = inc_mmint)
   fo_vars <- base::all.vars(y_modelformula)
   data <- extract_analysis_vars(data, y_modelformula)
@@ -27,8 +36,9 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
     indirect3 = c()
     direct = c()
     total = c()
-    total2 = c()
     prop1 = c()
+    prop2 = c()
+    prop3 = c()
     dependence = c()
     interaction = c()
     total_sim = sim*mi_prepare_obj$m
@@ -39,7 +49,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
         indirect1 = c(indirect1, results[[i]]$indirect1)
         total = c(total, results[[i]]$total)
         prop1 = c(prop1, results[[i]]$prop1)
-        total2 = c(total2, results[[i]]$total2)
+
       }else if (length(med) == 2) {
         indirect1 = c(indirect1, results[[i]]$indirect1)
         indirect2 = c(indirect2, results[[i]]$indirect2)
@@ -47,68 +57,70 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
         interaction = c(interaction, results[[i]]$interaction)
         dependence = c(dependence, results[[i]]$dependence)
         total = c(total, results[[i]]$total)
-        total2 = c(total2, results[[i]]$total2)
+
       }else if (length(med) == 3) {
         indirect1 = c(indirect1, results[[i]]$indirect1)
         indirect2 = c(indirect2, results[[i]]$indirect2)
         indirect3 = c(indirect3, results[[i]]$indirect3)
         direct = c(direct, results[[i]]$direct)
         total = c(total, results[[i]]$total)
-        total2 = c(total, results[[i]]$total2)
+
       }
     }
 
     if (length(med) == 1) {
-      direct = sort(direct)
-      indirect1 = sort(indirect1)
-      total = sort(total)
-      total2 = sort(total2)
+
+      prop1 = indirect/total
 
       print("Combined results")
-      print(paste("Indirect effect:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect1[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect1[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(direct[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(direct[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Total effect 2:",format(round(mean(total2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total2[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total2[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
+      print(paste("Indirect effect:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(total,1-(1-conf.level)/2),3), nsmall = 3),")"))
 
-      results[[mi_prepare_obj$m + 1]] = list(direct = direct, indirect1 = indirect1, total = total1, total2 = total2)
+      print(paste("Proportion mediated:",format(round(median(prop1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+
+
+      results[[mi_prepare_obj$m + 1]] = list(direct = direct, indirect1 = indirect1, total = total1)
 
     }else if (length(med) == 2) {
-      indirect1 = sort(indirect1)
-      indirect2 = sort(indirect2)
-      direct = sort(direct)
-      interaction = sort(interaction)
-      dependence = sort(dependence)
-      total = sort(total)
-      total2 = sort(total2)
+
+      prop1 = indirect1/total
+      prop2 = indirect2/total
 
       print("Combined results")
-      print(paste("Indirect effect:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect1[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect1[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Indirect effect:",format(round(mean(indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect2[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect2[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(direct[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(direct[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Interaction effect:",format(round(mean(interaction), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(interaction[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(interaction[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Dependence:",format(round(mean(dependence), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(dependence[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(dependence[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Total effect 2:",format(round(mean(total2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total2[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total2[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
+      print(paste("Indirect effect through M1:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Indirect effect through M2:",format(round(mean(indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect2,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
 
-      results[[mi_prepare_obj$m + 1]] = list(indirect1 = indirect1, indirect2 = indirect2, direct = direct, interaction = interaction, dependence = dependence, total = total, total2 = total2)
+      print(paste("Interaction effect:",format(round(mean(interaction), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(interaction,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(interaction,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Dependence:",format(round(mean(dependence), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(dependence,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(dependence,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+      print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(total,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+      print(paste("Proportion mediated through M1:",format(round(median(prop1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Proportion mediated through M2:",format(round(median(prop2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop2,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+      results[[mi_prepare_obj$m + 1]] = list(indirect1 = indirect1, indirect2 = indirect2, direct = direct, interaction = interaction, dependence = dependence, total = total)
 
     }else if (length(med) == 3) {
-      indirect1 = sort(indirect1)
-      indirect2 = sort(indirect2)
-      indirect3 = sort(indirect3)
-      direct = sort(direct)
-      total = sort(total)
-      total2 = sort(total2)
+
+      prop1 = indirect1/total
+      prop2 = indirect2/total
+      prop3 = indirect3/total
 
       print("Combined results")
-      print(paste("Indirect effect:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect1[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect1[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Indirect effect:",format(round(mean(indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect2[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect2[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Indirect effect:",format(round(mean(indirect3), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect3[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect3[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(direct[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(direct[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-      print(paste("Total effect 2:",format(round(mean(total2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total2[round(total_sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total2[total_sim - round(total_sim*(1-conf.level)/2)],3), nsmall = 3),")"))
+      print(paste("Indirect effect through M1:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Indirect effect through M2:",format(round(mean(indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect2,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Indirect effect through M3:",format(round(mean(indirect3), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect3,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect3,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(total,1-(1-conf.level)/2),3), nsmall = 3),")"))
 
-      results[[mi_prepare_obj$m + 1]] = list(indirect1 = indirect1, indirect2 = indirect2, indirect3 = indirect3, direct = direct, total = total, total2 = total2)
+      print(paste("Proportion mediated through M1:",format(round(median(prop1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Proportion mediated through M2:",format(round(median(prop2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop2,1-(1-conf.level)/2),3), nsmall = 3),")"))
+      print(paste("Proportion mediated through M3:",format(round(median(prop3), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop3,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop3,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+      results[[mi_prepare_obj$m + 1]] = list(indirect1 = indirect1, indirect2 = indirect2, indirect3 = indirect3, direct = direct, total = total)
     }
 
     return(results)
@@ -121,7 +133,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
 medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data, sim = 1000, conf.level = 0.95, out_scale = "difference") {
   data <- tibble::add_column(data, missing = rowSums(sapply(data, is.na)))
   data <- data[data$missing == 0, 1:length(data)-1]
-  registerDoParallel(cores = detectCores())
+  doParallel::registerDoParallel(cores = parallel::detectCores())
   m2_modelformula = NULL
   m2_modelformula_cond = NULL
   m2res = NULL
@@ -138,8 +150,11 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
   indirect3 = rep(0, sim)
   direct = rep(0, sim)
   total = rep(0, sim)
-  total2 = rep(0, sim)
+
   prop1 = rep(0, sim)
+  prop2 = rep(0, sim)
+  prop3 = rep(0, sim)
+
   dependence = rep(0, sim)
   interaction = rep(0, sim)
 
@@ -221,25 +236,6 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
 
   y_fo_terms = random_draw_formula_terms(model = yres, data_name = "data", coeff_name = "current_ycoeff")
   y_cat_var_dict = gen_cat_var_dict(yres)
-  #y_formula = random_draw_formula(y_cat_var_dict, y_fo_terms, treat, treat_lv = treat_lv, control_lv = control_lv)
-
-  #for direct effect
-  #y_formula_100_part_cond = NULL
-  #y_formula_000_part_cond = NULL
-
-  #for indirect effect through M1
-  #y_formula_110_part_marg = NULL
-  #y_formula_100_part_marg = NULL
-
-  #for indirect effect through M2
-  #y_formula_101_part_marg = NULL
-  #y_formula_100_part_marg = NULL
-
-  #for indirect effect due to the dependence between M1 and M2
-  #y_formula_111_part_cond = NULL
-  #y_formula_111_part_marg = NULL
-  #y_formula_100_part_cond = NULL
-  #y_formula_100_part_marg = NULL
 
   y_te_fo_terms = random_draw_formula_terms(model = yres_te, data_name = "data", coeff_name = "current_ycoeff_te")
   y_te_cat_var_dict = gen_cat_var_dict(yres_te)
@@ -339,7 +335,6 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
   if (length(med) == 1) {
     m1_fixed_part_value = NULL
     y_fixed_part_value = NULL
-    #for (i in 1:sim) {
     sim_res <- foreach(i=1:sim, .combine = rbind, .inorder = TRUE, .export = c("random_draw","generate_estimates")) %dopar% {
       current_m1coeff = m1coeff[i,]
       current_ycoeff = ycoeff[i,]
@@ -383,11 +378,7 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
       }
 
       generate_estimates(data.frame(y00,y01,y10,y11,y0,y1),ymodel, out_scale)
-      #indirect1[i] = tmp$indirect
-      #direct[i] = tmp$direct
-      #total[i] = tmp$total
-      #prop1[i] = tmp$prop
-      #total2[i] =tmp$total2
+
     }
   }else if (length(med) == 2) {
     m1_fixed_part_value = NULL
@@ -398,7 +389,6 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
     m2coeff_marg = MASS::mvrnorm(n = sim, m2res_marg$coefficients, vcov(m2res_marg))
     m2coeff_cond = MASS::mvrnorm(n = sim, m2res_cond$coefficients, vcov(m2res_cond))
 
-    #for (i in 1:sim) {
     sim_res <- foreach(i=1:sim, .combine = rbind, .inorder = TRUE, .export = c("random_draw","generate_estimates")) %dopar% {
       current_m1coeff = m1coeff[i,]
       current_ycoeff = ycoeff[i,]
@@ -479,13 +469,6 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
       }
 
       generate_estimates(data.frame(y_000_cond, y_100_cond, y_110_marg, y_100_marg, y_101_marg, y_111_cond, y_111_marg, y0, y1), ymodel, out_scale = out_scale)
-      #direct[i] = tmp$direct
-      #indirect1[i] = tmp$indirect1
-      #indirect2[i] = tmp$indirect2
-      #interaction[i] = tmp$interaction
-      #dependence[i] = tmp$dependence
-      #total[i] = tmp$total
-      #total2[i] = tmp$total2
     }
   }else if (length(med) == 3) {
     m2coeff_marg = MASS::mvrnorm(n = sim, m2res_marg$coefficients, vcov(m2res_marg))
@@ -496,7 +479,6 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
     m3coeff_cond_m2 = MASS::mvrnorm(n = sim, m3res_cond_m2$coefficients, vcov(m3res_cond_m2))
     m3coeff_cond_m1m2 = MASS::mvrnorm(n = sim, m3res_cond_m1m2$coefficients, vcov(m3res_cond_m1m2))
 
-    #for (i in 1:sim) {
     sim_res <- foreach(i=1:sim, .combine = rbind, .inorder = TRUE, .export = c("random_draw","generate_estimates")) %dopar% {
       current_m1coeff = m1coeff[i,]
       current_ycoeff = ycoeff[i,]
@@ -628,66 +610,63 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
       }
 
       generate_estimates(data.frame(y_0000_cond_m1m2m3, y_1000_cond_m1m2m3, y_1100_cond_m2m3, y_1000_cond_m2m3, y_1010_cond_m1m3, y_1000_cond_m1m3, y_1001_cond_m1m2, y_1000_cond_m1m2, y_1111_cond_m1m2m3, y0, y1), ymodel, out_scale = out_scale)
-      #direct[i] = tmp$direct
-      #indirect1[i] = tmp$indirect1
-      #indirect2[i] = tmp$indirect2
-      #indirect3[i] = tmp$indirect3
-      #total[i] = tmp$total
-      #total2[i] = tmp$total2
     }
   }
 
   sim_res = as.data.frame(sim_res)
 
   if (length(med) == 1) {
-    indirect1 = sort(sim_res$indirect1)
-    direct = sort(sim_res$direct)
-    total = sort(sim_res$total)
-    prop1 = sort(sim_res$prop1)
-    total2 = sort(sim_res$total2)
+
+    prop1 = sim_res$indirect1/sim_res$total
 
     print("Results")
-    print(paste("Indirect effect:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect1[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect1[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(direct[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(direct[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Total effect 2:",format(round(mean(total2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total2[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total2[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    output = list(indirect = indirect1, direct = direct, total = total, prop1 = prop1, total2 = total2, ymodel = yres, ymodel_te = yres_te, m1_model = m1res)
+    print(paste("Indirect effect:",format(round(mean(sim_res$indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Direct effect:",format(round(mean(sim_res$direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Total effect:",format(round(mean(sim_res$total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$total,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+    print(paste("Proportion mediated:",format(round(median(prop1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+    output = list(indirect = sim_res$indirect1, direct = sim_res$direct, total = sim_res$total, prop1 = prop1, ymodel = yres, ymodel_te = yres_te, m1_model = m1res)
+
     return(output)
   }else if (length(med) == 2) {
-    indirect1 = sort(sim_res$indirect1)
-    indirect2 = sort(sim_res$indirect2)
-    direct = sort(sim_res$direct)
-    interaction = sort(sim_res$interaction)
-    dependence = sort(sim_res$dependence)
-    total = sort(sim_res$total)
-    total2 = sort(sim_res$total2)
+
+    prop1 = sim_res$indirect1/sim_res$total
+    prop2 = sim_res$indirect2/sim_res$total
 
     print("Results")
-    print(paste("Indirect effect:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect1[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect1[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Indirect effect:",format(round(mean(indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect2[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect2[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(direct[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(direct[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Interaction effect:",format(round(mean(interaction), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(interaction[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(interaction[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Dependence:",format(round(mean(dependence), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(dependence[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(dependence[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Total effect 2:",format(round(mean(total2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total2[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total2[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    output = list(direct = direct, indirect1 = indirect1, indirect2 = indirect2, dependence = dependence, interaction = interaction, total = total, total2 = total2, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, m2_model_cond = m2res_cond, m2_model_marg = m2res_marg)
+    print(paste("Indirect effect through M1:",format(round(mean(sim_res$indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Indirect effect through M2:",format(round(mean(sim_res$indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect2,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Direct effect:",format(round(mean(sim_res$direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+    print(paste("Interaction effect:",format(round(mean(sim_res$interaction), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$interaction,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$interaction,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Dependence:",format(round(mean(sim_res$dependence), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$dependence,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$dependence,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+    print(paste("Total effect:",format(round(mean(sim_res$total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$total,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+    print(paste("Proportion mediated through M1:",format(round(median(prop1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Proportion mediated through M2:",format(round(median(prop2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop2,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+    output = list(direct = sim_res$direct, indirect1 = sim_res$indirect1, indirect2 = sim_res$indirect2, dependence = sim_res$dependence, interaction = sim_res$interaction, total = sim_res$total, prop1 = prop1, prop2 = prop2, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, m2_model_cond = m2res_cond, m2_model_marg = m2res_marg)
     return(output)
   }else if (length(med) ==  3) {
-    indirect1 = sort(sim_res$indirect1)
-    indirect2 = sort(sim_res$indirect2)
-    indirect3 = sort(sim_res$indirect3)
-    direct = sort(sim_res$direct)
-    total = sort(sim_res$total)
-    total2 = sort(sim_res$total2)
+
+    prop1 = sim_res$indirect1/sim_res$total
+    prop2 = sim_res$indirect2/sim_res$total
+    prop3 = sim_res$indirect3/sim_res$total
 
     print("Results")
-    print(paste("Indirect effect:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect1[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect1[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Indirect effect:",format(round(mean(indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect2[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect2[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Indirect effect:",format(round(mean(indirect3), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(indirect3[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(indirect3[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(direct[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(direct[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    print(paste("Total effect 2:",format(round(mean(total2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(total2[round(sim*(1-conf.level)/2)],3), nsmall = 3),", ", format(round(total2[sim - round(sim*(1-conf.level)/2)],3), nsmall = 3),")"))
-    output = list(direct = direct, indirect1 = indirect1, indirect2 = indirect2, indirect3 = indirect3, total = total, total2 = total2, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, m2_model_cond = m2res_cond, m2_model_marg = m2res_marg, m3_model_marg = m3res_marg, m3_model_cond_m1 = m3res_cond_m1, m3_model_cond_m2 = m3res_cond_m2, m3_model_cond_m1m2 = m3res_cond_m1m2)
+    print(paste("Indirect effect through M1:",format(round(mean(sim_res$indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Indirect effect through M2:",format(round(mean(sim_res$indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect2,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Indirect effect through M3:",format(round(mean(sim_res$indirect3), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect3,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect3,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Direct effect:",format(round(mean(sim_res$direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Total effect:",format(round(mean(sim_res$total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$total,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+    print(paste("Proportion mediated through M1:",format(round(median(prop1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop1,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Proportion mediated through M2:",format(round(median(prop2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop2,1-(1-conf.level)/2),3), nsmall = 3),")"))
+    print(paste("Proportion mediated through M3:",format(round(median(prop3), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop3,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop3,1-(1-conf.level)/2),3), nsmall = 3),")"))
+
+    output = list(direct = sim_res$direct, indirect1 = sim_res$indirect1, indirect2 = sim_res$indirect2, indirect3 = sim_res$indirect3, total = sim_res$total, prop1 = prop1, prop2 = prop2, prop3 = prop3, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, m2_model_cond = m2res_cond, m2_model_marg = m2res_marg, m3_model_marg = m3res_marg, m3_model_cond_m1 = m3res_cond_m1, m3_model_cond_m2 = m3res_cond_m2, m3_model_cond_m1m2 = m3res_cond_m1m2)
     return(output)
   }
 }
@@ -699,9 +678,8 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       est1 = (mean(ys$y11 - ys$y10))
       est2 = (mean(ys$y10 - ys$y00))
       est3 = (mean(ys$y11 - ys$y00))
-      est4 = (est1/est3)
       est5 = (mean(ys$y1 - ys$y0))
-      output = c(indirect1 = est1, direct = est2, total = est3, prop = est4, total2 = est5)
+      output = c(indirect1 = est1, direct = est2, total = est3)
       return(output)
     }else if (model == "logistic regression") {
       ys$y00 = (1-1/(1+exp(ys$y00)))
@@ -716,7 +694,6 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
         est1 = mean(ys$y11 - ys$y10)
         est2 = mean(ys$y10 - ys$y00)
         est3 = mean(ys$y11 - ys$y00)
-        est4 = est1/est3
         est5 = mean(ys$y1 - ys$y0)
       }else if (out_scale == "ratio") {
 
@@ -725,10 +702,10 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
         est2 = (mean(ys$y10)/mean(1-ys$y10))/(mean(ys$y00)/mean(1-ys$y00))
         est3 = (mean(ys$y11)/mean(1-ys$y11))/(mean(ys$y00)/mean(1-ys$y00))
         #Implement this later!
-        est4 = (mean(ys$y11)/mean(1-ys$y11))/(mean(ys$y00)/mean(1-ys$y00))
+        #est4 = (mean(ys$y11)/mean(1-ys$y11))/(mean(ys$y00)/mean(1-ys$y00))
         est5 = (mean(ys$y1)/mean(1-ys$y1))/(mean(ys$y0)/mean(1-ys$y0))
       }
-      output = c(indirect1 = est1, direct = est2, total = est3, prop = est4, total2 = est5)
+      output = c(indirect1 = est1, direct = est2, total = est3)
       return(output)
     }else if (model == "poisson regression") {
       ys$y00 = exp(ys$y00)
@@ -741,10 +718,10 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       est1 = mean(ys$y11 - ys$y10)
       est2 = mean(ys$y10 - ys$y00)
       est3 = mean(ys$y11 - ys$y00)
-      est4 = est1/est3
+
       est5 = mean(ys$y1 - ys$y0)
 
-      output = c(indirect = est1, direct = est2, total = est3, prop = est4, total2 = est5)
+      output = c(indirect1 = est1, direct = est2, total = est3)
       return(output)
     }
   }else if (length(ys) == 9) {
@@ -753,10 +730,6 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
 
       #direct effect
       est1 = mean(ys$y_100_cond - ys$y_000_cond)
-
-      #In Vansteelandt and Daniel 2017 (codes)
-      #They have actually used a definition that I am proposing
-      #Just need to add an extra interaction effect
 
       #indirect effect through M1
       est2 = mean(ys$y_110_marg - ys$y_100_marg)
@@ -767,14 +740,10 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       #mediated interaction
       est5 = mean(ys$y_111_marg - ys$y_110_marg - ys$y_101_marg + ys$y_100_marg)
 
-      #based on vansteelandt and Daniel 2017 actual definition in paper
-      #est2 = mean(ys$y_110_marg - ys$y_100_marg)
-      #est3 = mean(ys$y_111_marg - ys$y_110_marg)
-      #est4 = mean(ys$y_111_cond - ys$y_111_marg - ys$y_100_cond + ys$y_100_marg)
-
       est6 = mean(ys$y_111_cond - ys$y_000_cond)
       est7 = mean(ys$y1 - ys$y0)
-      output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6, total2 = est7)
+
+      output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6)
       return(output)
     }else if (model == "logistic regression") {
       #calculate the probabilities here
@@ -801,7 +770,8 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
         est5 = mean(ys$y_111_marg - ys$y_110_marg - ys$y_101_marg + ys$y_100_marg)
         est6 = mean(ys$y_111_cond - ys$y_000_cond)
         est7 = mean(ys$y1 - ys$y0)
-        output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6, total2 = est7)
+
+        output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6)
         return(output)
 
       }else if (out_scale == "ratio") {
@@ -814,7 +784,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
         est6 = (mean(ys$y_111_cond)/mean(1-ys$y_111_cond)) / (mean(ys$y_000_cond)/mean(1-ys$y_000_cond))
         est7 = (mean(ys$y1)/mean(1-ys$y1))/(mean(ys$y0)/mean(1 - ys$y0))
 
-        output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6, total2 = est7)
+        output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6)
         return(output)
 
       }
@@ -841,7 +811,8 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       est5 = mean(ys$y_111_marg - ys$y_110_marg - ys$y_101_marg + ys$y_100_marg)
       est6 = mean(ys$y_111_cond - ys$y_000_cond)
       est7 = mean(ys$y1 - ys$y0)
-      output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6, total2 = est7)
+
+      output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6)
       return(output)
     }
     #for 3 mediators, the order is y_0000_cond_m1m2m3, y_1000_cond_m1m2m3, y_1100_cond_m2m3, y_1000_cond_m2m3, y_1010_cond_m1m3, y_1000_cond_m1m3, y_1001_cond_m1m2, y_1000_cond_m1m2, y_1111_cond_m1m2m3, y0, y1
@@ -853,7 +824,8 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       est4 = mean(ys$y_1001_cond_m1m2 - ys$y_1000_cond_m1m2)
       est5 = mean(ys$y_1111_cond_m1m2m3 - ys$y_0000_cond_m1m2m3)
       est6 = mean(ys$y1 - ys$y0)
-      output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5, total2 = est6)
+
+      output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5)
       return(output)
 
     }else if (model == "logistic regression") {
@@ -877,7 +849,8 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
         est4 = mean(ys$y_1001_cond_m1m2 - ys$y_1000_cond_m1m2)
         est5 = mean(ys$y_1111_cond_m1m2m3 - ys$y_0000_cond_m1m2m3)
         est6 = mean(ys$y1 - ys$y0)
-        output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5, total2 = est6)
+
+        output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5)
         return(output)
 
       }else if (out_scale == "ratio") {
@@ -902,7 +875,8 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       est4 = mean(ys$y_1001_cond_m1m2 - ys$y_1000_cond_m1m2)
       est5 = mean(ys$y_1111_cond_m1m2m3 - ys$y_0000_cond_m1m2m3)
       est6 = mean(ys$y1 - ys$y0)
-      output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5, total2 = est6)
+
+      output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5)
       return(output)
     }
   }
