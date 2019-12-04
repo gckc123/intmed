@@ -79,8 +79,6 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
 
       print(paste("Proportion mediated:",format(round(median(prop1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop1,1-(1-conf.level)/2),3), nsmall = 3),")"))
 
-
-
       results[[mi_prepare_obj$m + 1]] = list(direct = direct, indirect1 = indirect1, total = total1)
 
     }else if (length(med) == 2) {
@@ -122,7 +120,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
 
       results[[mi_prepare_obj$m + 1]] = list(indirect1 = indirect1, indirect2 = indirect2, indirect3 = indirect3, direct = direct, total = total)
     }
-
+    results[[mi_prepare_obj$m + 2]] = mids_obj
     return(results)
   }else {
     results[[1]] = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = data, sim = sim, conf.level = conf.level, out_scale = out_scale)
@@ -133,6 +131,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
 medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data, sim = 1000, conf.level = 0.95, out_scale = "difference") {
   data <- tibble::add_column(data, missing = rowSums(sapply(data, is.na)))
   data <- data[data$missing == 0, 1:length(data)-1]
+
   doParallel::registerDoParallel(cores = parallel::detectCores())
   m2_modelformula = NULL
   m2_modelformula_cond = NULL
@@ -612,7 +611,7 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
       generate_estimates(data.frame(y_0000_cond_m1m2m3, y_1000_cond_m1m2m3, y_1100_cond_m2m3, y_1000_cond_m2m3, y_1010_cond_m1m3, y_1000_cond_m1m3, y_1001_cond_m1m2, y_1000_cond_m1m2, y_1111_cond_m1m2m3, y0, y1), ymodel, out_scale = out_scale)
     }
   }
-
+  doParallel::stopImplicitCluster()
   sim_res = as.data.frame(sim_res)
 
   if (length(med) == 1) {
