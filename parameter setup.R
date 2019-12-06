@@ -226,13 +226,13 @@ ff<- medi(y = y, med = med, treat = treat, c = NULL, ymodel = "poisson regressio
 ff<- medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = example_data, sim = sim, conf.level = conf.level, out_scale = out_scale)
 
 y = "heavyalcohol"
-med =c("peer","alcohol")
+med =c("peer","alcohol","conflict")
 treat = "supervision"
 mod = NULL
 c = NULL
 moc = NULL
 ymodel = "poisson regression"
-mmodel = c("regression","regression")
+mmodel = c("regression","regression","regression")
 incint = NULL
 inc_mmint = FALSE
 data = alcohol
@@ -242,9 +242,10 @@ control_lv = 0
 out_scale = "difference"
 complete_analysis = FALSE
 conf.level = 0.95
+digits = 2
 
 
-ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol"), treat = "supervision", c = NULL, ymodel = "poisson regression", mmodel = c("regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 1000, out_scale = "difference")
+ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol"), treat = "supervision", c = "conflict", ymodel = "poisson regression", mmodel = c("regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 1000, out_scale = "difference")
 
 #parallel computing vs old mediaiton package
 example_data <- tibble::add_column(example_data, missing = rowSums(sapply(example_data, is.na)))

@@ -1,18 +1,18 @@
 descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
-  
+
   html_output <- ""
   df <- dplyr::as_tibble(data)
-  
+
   #listwise deletion or not?
   if (complete == TRUE) {
     df <- tibble::add_column(df, missing = rowSums(sapply(df, is.na)))
     df <- df[df$missing == 0, 1:length(df)-1]
   }
-  
+
   df <- char2fac(df)
-  
+
   grouping_combo <- NULL
-  
+
   #Display the descriptive statistics by the grouping variables
   #firstly construct the grouping_combo dataframe that enumerates all grouping combinations
   if (length(group) > 0) {
@@ -35,16 +35,16 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
         }
       }
     }
-    
+
     N_list <- list()
     Mean_list <- list()
     SD_list <- list()
     Median_list <- list()
     IQR_list <- list()
-    
+
     NCat_list <- list()
     Perc_list <- list()
-    
+
     for (k in 1:nrow(grouping_combo)) {
       selection = ""
       for (l in seq_along(names(grouping_combo))) {
@@ -55,11 +55,11 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
           selection = paste(selection, tmp, sep = " & ")
         }
       }
-      
+
       expr <- parse(text = paste0("subdf <- df[", selection, ", !(names(df) %in% names(grouping_combo))]"))
-      
+
       eval(expr)
-      
+
       if (length(df[,sapply(df, is.numeric)]) > 0) {
         dfnumeric <- subdf[, sapply(subdf, is.numeric)]
         Variables <- colnames(dfnumeric)
@@ -69,7 +69,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
         Median_list[[k]] <- format(round(sapply(dfnumeric, median, na.rm = TRUE), digits), nsmall = digits)
         IQR_list[[k]] <- format(round(sapply(dfnumeric, stats::IQR, na.rm = TRUE), digits), nsmall = digits)
       }
-      
+
       if (length(df[,!sapply(df, is.numeric)]) > 0) {
         dfnonnumeric <- subdf[, !sapply(subdf, is.numeric)]
         for (i in seq_along(dfnonnumeric)) {
@@ -92,8 +92,8 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
         Perc_list[[k]] <- Perc
       }
     }
-    
-    
+
+
     if (length(df[,sapply(df, is.numeric)]) > 0) {
       html_output <- "<h4>Table. Descriptive statistics of continuous variables</h4>"
       html_output <- c(html_output, "<table style=\"text-align:left\">")
@@ -106,14 +106,14 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
           html_output <- c(html_output, paste0("<tr><td style=\"padding-right: 1em\">",Variables[i],"</td><td style=\"padding-right: 1em\">",N_list[[k]][[i]],
                                                "</td><td style=\"padding-right: 1em\">",Mean_list[[k]][[i]],"</td><td style=\"padding-right: 1em\">",SD_list[[k]][[i]],
                                                "</td><td style=\"padding-right: 1em\">",Median_list[[k]][[i]],"</td><td style=\"padding-right: 1em\">",IQR_list[[k]][[i]],"</td></tr>"))
-          
+
         }
         html_output <- c(html_output, "<tr><td colspan=\"6\" style=\"border-bottom: 1px solid black\"></td></tr>")
       }
       html_output <- c(html_output, "</table>")
     }
-    
-    if (length(df[,!sapply(df, is.numeric)]) > 0) { 
+
+    if (length(df[,!sapply(df, is.numeric)]) > 0) {
       html_output <- c(html_output, "<h4>Table. Descriptive statistics of categorical variables</h4>")
       html_output <- c(html_output, "<table style=\"text-align:left\">")
       html_output <- c(html_output, paste0("<tr><td colspan=\"",length(Perc_list)*2+2,"\" style =\"border-bottom: 1px solid black\"></td></tr>"))
@@ -131,7 +131,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
         if (i != 1 & VariablesCat[[i]] != "") {
           html_output <- c(html_output, paste0("<tr><td></td><td colspan=\"",length(Perc_list)*2+1,"\" style =\"border-bottom: 1px solid black\"></td></tr>"))
         }
-        
+
         tmp <- paste0("<tr><td style=\"padding-right: 1em\">",VariablesCat[[i]],"</td><td style=\"padding-right: 1em\">",Levels[[i]],"</td>")
         for (j in 1:length(NCat_list)) {
           tmp <- paste0(tmp,"<td style=\"padding-right: 1em\">",NCat_list[[j]][i],"</td><td style=\"padding-right: 1em\">",Perc_list[[j]][i],"</td>")
@@ -151,7 +151,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
       SD <- format(round(sapply(dfnumeric, sd, na.rm = TRUE), digits), nsmall = digits)
       Median <- format(round(sapply(dfnumeric, median, na.rm = TRUE), digits), nsmall = digits)
       IQR <- format(round(sapply(dfnumeric, stats::IQR, na.rm = TRUE), digits), nsmall = digits)
-      
+
       html_output <- "<h4>Table. Descriptive statistics of continuous variables</h4>"
       html_output <- c(html_output, "<table style=\"text-align:left\">")
       html_output <- c(html_output, "<tr><td colspan=\"6\" style=\"border-bottom: 1px solid black\"></td></tr>")
@@ -162,7 +162,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
       }
       html_output <- c(html_output, "<tr><td colspan=\"6\" style=\"border-bottom: 1px solid black\"></td></tr>")
       html_output <- c(html_output, "</table>")
-      
+
     }
     dfnonnumeric <- df[, !sapply(df, is.numeric)]
     if (length(dfnonnumeric) > 0) {
