@@ -1,21 +1,60 @@
-gen_reg_table <- function(y_res, m_res, digits = 2, conf.level = 0.95) {
+gen_med_reg_html <- function(res_df, y, med, conf.level = 0.95) {
+  html_output = "<table style = \"text-align: left;border-bottom: 1px solid black; border-top: 1px solid black;\" cellspacing=\"0\" cellpadding = \"2\">"
+  html_line = "<tr><td></td>"
+
+  for (i in 1:length(med)) {
+    html_line = paste0(html_line,"<td colspan = \"3\">",med[i],"</td>")
+  }
+
+  html_line = paste0(html_line, "<td colspan = \"3\">", y,"</td></tr>")
+  html_output = c(html_output, html_line)
+  html_line = "<tr><td style=\"padding-right: 1em;border-bottom: 1px solid black;\">Variables</td>"
+  tmp = paste0(rep(paste0("<td style=\"padding-right: 1em;border-bottom: 1px solid black;\">b</td><td style=\"padding-right: 1em;border-bottom: 1px solid black;\">", round(conf.level*100,0),"% CI","</td><td style=\"padding-right: 1em;border-bottom: 1px solid black;\">p-value</td>"),length(med)+1), collapse = "")
+  html_line = paste0(html_line, tmp, "</tr>")
+  html_output = c(html_output, html_line)
+
+  res_df[sapply(res_df, is.na)] = "-"
+  for (i in 1:nrow(res_df)) {
+    html_line = paste0("<tr><td style=\"padding-right: 1em\">",paste0(res_df[i,], collapse = "</td><td style=\"padding-right: 1em\">"),"</td></tr>")
+    html_output = c(html_output, html_line)
+  }
+
+  html_output = c(html_output, "</table>")
+  sink("med_reg_table.html")
+  cat(html_output)
+  sink()
+  return(html_output)
+
+}
+
+gen_med_table <- function(indirect, direct, total, prop, dependence, interaction, conf.level = 0.95) {
+  html_output = "<table style = \"text-align: left;border-bottom: 1px solid black; border-top: 1px solid black;\" cellspacing=\"0\" cellpadding = \"2\">"
+  html_line = paste0("<tr><td></td><td>Estimates</td><td>",round(conf.level*100, 0),"% CI</td></tr>")
+  html_output = c(html_output, html_line)
+
+
+
+
+}
+
+gen_med_reg_table <- function(y_res, m_res, med, conf.level = 0.95, digits = 2) {
 
   table <- extract_reg_table(m_res[[1]], conf.level)
-  colnames(table) <- c("variables", "m1.b","m1.lb","m1.ub","m1.p")
+  colnames(table) <- c("variables", "m1.b","m1.ci","m1.p")
 
   if (length(m_res) > 1) {
     for (i in 2:length(m_res)) {
 
       #need to fix this 6.12.2019
       tmp <- extract_reg_table(m_res[[i]], conf.level)
-      colnames(tmp) <- c("variables", paste0("m",i,".b"), paste0("m",i,".lb"), paste0("m",i,".ub"), paste0("m",i,".p"))
+      colnames(tmp) <- c("variables", paste0("m",i,".b"), paste0("m",i,".ci"), paste0("m",i,".p"))
       table <- merge(table, tmp, by = "variables", all = TRUE)
     }
   }
 
-  tmp <- extract_reg_table(y_res, conf.level)
+  tmp <- extract_reg_table(y_res, conf.level, digits)
 
-  colnames(tmp) <- c("variables","y.b","y.lb", "y.ub", "y.p")
+  colnames(tmp) <- c("variables","y.b","y.ci", "y.p")
 
   table <- merge(table, tmp , by = "variables", all = TRUE)
   table.part1 <- table[!is.na(table$m1.b),]
@@ -27,7 +66,7 @@ gen_reg_table <- function(y_res, m_res, digits = 2, conf.level = 0.95) {
 }
 
 
-extract_reg_table <- function(res, conf.level) {
+extract_reg_table <- function(res, conf.level = 0.95, digits = 2) {
   half_alpha = (1-conf.level)/2
   if (class(res)[[1]] == "mipo") {
     table <- summary(res)
@@ -48,7 +87,17 @@ extract_reg_table <- function(res, conf.level) {
 
   table$lb <- table$estimate + table$ts*table$std.error
   table$ub <- table$estimate - table$ts*table$std.error
+
+  table$ci <- paste0("(",format(round(table$lb, digits), digits),", ",format(round(table$ub, digits), digits),")")
+  table$estimate <- format(round(table$estimate, digits), digits)
+  table$estimate <- ifelse(table$p.value < .05 ,paste0(table$estimate,"*"),table$estimate)
+  table$estimate <- ifelse(table$p.value < .01 ,paste0(table$estimate,"*"),table$estimate)
+  table$estimate <- ifelse(table$p.value < .001 ,paste0(table$estimate,"*"),table$estimate)
+
+
+  table$p.value <- format(round(table$p.value, 3), 3)
+
   table$variables <- rownames(table)
-  table <- table[,c("variables","estimate","lb","ub","p.value")]
+  table <- table[,c("variables","estimate","ci","p.value")]
   return(table)
 }

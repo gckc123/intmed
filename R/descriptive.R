@@ -152,7 +152,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
       Median <- format(round(sapply(dfnumeric, median, na.rm = TRUE), digits), nsmall = digits)
       IQR <- format(round(sapply(dfnumeric, stats::IQR, na.rm = TRUE), digits), nsmall = digits)
 
-      html_output <- "<h4>Table. Descriptive statistics of continuous variables</h4>"
+      html_output <- "<h3>Table. Descriptive statistics of continuous variables</h3>"
       html_output <- c(html_output, "<table style=\"text-align:left\">")
       html_output <- c(html_output, "<tr><td colspan=\"6\" style=\"border-bottom: 1px solid black\"></td></tr>")
       html_output <- c(html_output, "<tr><td style=\"padding-right: 1em\">Variables</td><td style=\"padding-right: 1em\">N</td><td style=\"padding-right: 1em\">Mean</td><td style=\"padding-right: 1em\">SD</td><td style=\"padding-right: 1em\">Median</td><td style=\"padding-right: 1em\">IQR</td></tr>")
@@ -183,7 +183,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
           Levels <- c(Levels, names(table(dfnonnumeric[i])))
         }
       }
-      html_output <- c(html_output, "<h4>Table. Descriptive statistics of categorical variables</h4>")
+      html_output <- c(html_output, "<h3>Table. Descriptive statistics of categorical variables</h3>")
       html_output <- c(html_output, "<table style=\"text-align:left\">")
       html_output <- c(html_output, "<tr><td colspan=\"4\" style =\"border-bottom: 1px solid black\"></td></tr>")
       html_output <- c(html_output, "<tr><td style=\"padding-right: 1em\">Variables</td><td style=\"padding-right: 1em\">Levels</td><td style=\"padding-right: 1em\">N</td><td style=\"padding-right: 1em\">%</td>")
