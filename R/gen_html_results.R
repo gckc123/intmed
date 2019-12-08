@@ -27,14 +27,40 @@ gen_med_reg_html <- function(res_df, y, med, conf.level = 0.95) {
 
 }
 
-gen_med_table <- function(indirect, direct, total, prop, dependence, interaction, conf.level = 0.95) {
+gen_med_table <- function(indirect, direct, total, prop, dependence, interaction, med, conf.level = 0.95, digits = 2) {
   html_output = "<table style = \"text-align: left;border-bottom: 1px solid black; border-top: 1px solid black;\" cellspacing=\"0\" cellpadding = \"2\">"
   html_line = paste0("<tr><td></td><td>Estimates</td><td>",round(conf.level*100, 0),"% CI</td></tr>")
   html_output = c(html_output, html_line)
-
-
-
-
+  for (i in 1:length(indirect)) {
+    estimate <- mean(indirect[[i]])
+    ci <- quantile(indirect[[i]], c((1-conf.level)/2,1-(1-conf.level)/2))
+    html_line <- paste0("<tr><td>Indirect effect mediated through ", med[i],"</td><td>", format(round(estimate, digits), nsmall = digits),"</td><td>(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td></tr>")
+    html_output = c(html_output, html_line)
+  }
+  if (!is.null(dependence)) {
+    estimate <- mean(dependence)
+    ci <- quantile(dependence, c((1-conf.level)/2,1-(1-conf.level)/2))
+    html_line <- paste0("<tr><td>Indirect effect mediated through the dependence between mediators</td><td>", format(round(estimate, digits), nsmall = digits),"</td><td>(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td></tr>")
+    html_output = c(html_output, html_line)
+  }
+  if (!is.null(interaction)) {
+    estimate <- mean(interaction)
+    ci <- quantile(interaction, c((1-conf.level)/2,1-(1-conf.level)/2))
+    html_line <- paste0("<tr><td>Indirect effect mediated through the interaction between mediators</td><td>", format(round(estimate, digits), nsmall = digits),"</td><td>(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td></tr>")
+    html_output = c(html_output, html_line)
+  }
+  estimate <- mean(direct)
+  ci <- quantile(direct, c((1-conf.level)/2,1-(1-conf.level)/2))
+  html_line <- paste0("<tr><td>Direct effect</td><td>", format(round(estimate, digits), nsmall = digits),"</td><td>(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td></tr>")
+  html_output = c(html_output, html_line)
+  for (i in 1:length(prop)) {
+    estimate <- mean(prop[[i]])
+    ci <- quantile(prop[[i]], c((1-conf.level)/2,1-(1-conf.level)/2))
+    html_line <- paste0("<tr><td>Indirect effect mediated through ", med[i],"</td><td>", format(round(estimate, digits), nsmall = digits),"</td><td>(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td></tr>")
+    html_output = c(html_output, html_line)
+  }
+  html_output <- c(html_output,"</table>")
+  return(html_output)
 }
 
 gen_med_reg_table <- function(y_res, m_res, med, conf.level = 0.95, digits = 2) {
