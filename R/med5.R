@@ -26,7 +26,8 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
 
   descriptive_html <- descriptive(data = data, digits = digits, complete = complete_analysis)
 
-  max_missing_perc <- max(sapply(lapply(data, is.na), sum)/nrow(data)*100)
+  max_missing_perc <- sum(ifelse(rowSums(as.data.frame(lapply(data, is.na))) == 0, 0 ,1))/nrow(data)*100
+  #max_missing_perc <- max(sapply(lapply(data, is.na), sum)/nrow(data)*100)
   results = list()
   y_res = list()
   m_res = list()
@@ -82,15 +83,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
       indirect_list[[1]] = indirect1
       prop_list[[1]] = indirect_list[[1]]/total
 
-
-      print("Combined results")
-      print(paste("Indirect effect:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(total,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-      print(paste("Proportion mediated:",format(round(median(prop_list[[1]]), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop_list[[1]],(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop_list[[1]],1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-      results$combined = list(direct = direct, indirect = indirect_list, total = total1, prop = prop_list)
+      results$combined = list(indirect = indirect_list, direct = direct, total = total, prop = prop_list, interaction = NULL, dependence = NULL)
 
     }else if (length(med) == 2) {
 
@@ -99,20 +92,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
       prop_list[[1]] = indirect_list[[1]]/total
       prop_list[[2]] = indirect_list[[2]]/total
 
-      print("Combined results")
-      print(paste("Indirect effect through M1:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Indirect effect through M2:",format(round(mean(indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect2,1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-      print(paste("Interaction effect:",format(round(mean(interaction), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(interaction,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(interaction,1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Dependence:",format(round(mean(dependence), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(dependence,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(dependence,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-      print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(total,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-      print(paste("Proportion mediated through M1:",format(round(median(prop_list[[1]]), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop_list[[1]],(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop_list[[1]],1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Proportion mediated through M2:",format(round(median(prop_list[[2]]), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop_list[[2]],(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop_list[[2]],1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-      results$combined = list(indirect = indirect_list, direct = direct, interaction = interaction, dependence = dependence, total = total, prop = prop_list)
+      results$combined = list(indirect = indirect_list, direct = direct, total = total, prop = prop_list, interaction = interaction, dependence = dependence)
 
     }else if (length(med) == 3) {
 
@@ -123,18 +103,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
       prop_list[[2]] = indirect_list[[2]]/total
       prop_list[[3]] = indirect_list[[3]]/total
 
-      print("Combined results")
-      print(paste("Indirect effect through M1:",format(round(mean(indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Indirect effect through M2:",format(round(mean(indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect2,1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Indirect effect through M3:",format(round(mean(indirect3), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(indirect3,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(indirect3,1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Direct effect:",format(round(mean(direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Total effect:",format(round(mean(total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(total,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-      print(paste("Proportion mediated through M1:",format(round(median(prop_list[[1]]), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop_list[[1]],(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop_list[[1]],1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Proportion mediated through M2:",format(round(median(prop_list[[2]]), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop_list[[2]],(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop_list[[2]],1-(1-conf.level)/2),3), nsmall = 3),")"))
-      print(paste("Proportion mediated through M3:",format(round(median(prop_list[[3]]), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop_list[[3]],(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop_list[[3]],1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-      results$combined = list(indirect = indirect_list, direct = direct, total = total, prop = prop_list)
+      results$combined = list(indirect = indirect_list, direct = direct, total = total, prop = prop_list, interaction = NULL, dependence = NULL)
     }
     results$mids = mids_obj
 
@@ -158,20 +127,49 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
       eval(expr)
     }
 
-    results$model_summary <- gen_med_reg_table(y_res = results$y_pooled_res, m_res = results$m_pooled_res, conf.level = conf.level, digits = digits)
-    results$model_summary_html <- gen_med_reg_html(results$model_summary, y, med, conf.level)
-
-    return(results)
   }else {
     results$individual = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = data, sim = sim, conf.level = conf.level, out_scale = out_scale)
     for (i  in 1:length(med)) {
       expr = parse(text = paste0("m_res[[i]] = results$individual$m",i,"_model"))
       eval(expr)
     }
-    results$model_summary <- gen_med_reg_table(y_res = results$individual$ymodel, m_res = m_res, conf.level = conf.level, digits = digits)
-    results$model_summary_html <- gen_med_reg_html(results$model_summary, y, med, conf.level)
-    return(results)
+    #These codes can be made more efficients by changing output of the medi function.
+    if (length(med) == 1) {
+      results$combined = list(indirect = list(results$individual$indirect1), direct = results$individual$direct, total = results$individual$total, prop = list(results$individual$prop1), interaction = NULL, dependence = NULL)
+    }else if (length(med) == 2) {
+      results$combined = list(indirect = list(results$individual$indirect1, results$individual$indirect2), direct = results$individual$direct, total = results$individual$total, prop = list(results$individual$prop1, results$individual$prop2), interaction = results$individual$interaction, dependence = results$individual$dependence)
+    }else if (length(med) == 3) {
+      results$combined = list(indirect = list(results$individual$indirect1, results$individual$indirect2, results$individual$indirect2), direct = results$individual$direct, total = results$individual$total, prop = list(results$individual$prop1, results$individual$prop2, results$individual$prop3), interaction = NULL, dependence = NULL)
+    }
   }
+  results$model_summary <- gen_med_reg_table(y_res = results$y_pooled_res, m_res = results$m_pooled_res, conf.level = conf.level, digits = digits)
+  model_summary_html <- gen_med_reg_html(results$model_summary, y, med, conf.level)
+  mediation_res_html <- gen_med_table_html(med_res = results$combined, med = med, conf.level = conf.level, digits = digits)
+
+  tmp_text <- "<br/> The table below shows the descriptive statistics of all analyses variables."
+  if (max_missing_perc > 0) {
+    if (complete_analysis == TRUE) {
+      tmp_text <- paste(tmp_text, "There were ", round(max_missing_perc,2),"% cases with missing data. Complete case analysis wass used for the subsequent mediation analysis.")
+    }else {
+      tmp_text <- paste(tmp_text, "There were ", round(max_missing_perc,2),"% cases with missing data. Multiple imputation was used to impute missing data and ", mi_prepare_obj$m, "datasets were imputed.")
+    }
+  }
+  tmp_text <- paste(tmp_text, "<br/>")
+
+  results$res_html <- c(tmp_text, descriptive_html)
+
+  results$res_html <- c(results$res_html, model_summary_html)
+
+  tmp_text <- "<br/> The table below shows the indirect, direct and total effects. <br/>"
+
+  results$res_html <- c(results$res_html, tmp_text, mediation_res_html)
+
+  sink("res.html")
+  cat(results$res_html)
+  sink()
+
+  return(results)
+
 }
 
 medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data, sim = 1000, conf.level = 0.95, out_scale = "difference") {
@@ -658,39 +656,20 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
     }
   }
   doParallel::stopImplicitCluster()
+
   sim_res = as.data.frame(sim_res)
 
   if (length(med) == 1) {
 
     prop1 = sim_res$indirect1/sim_res$total
 
-    print("Results")
-    print(paste("Indirect effect:",format(round(mean(sim_res$indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Direct effect:",format(round(mean(sim_res$direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Total effect:",format(round(mean(sim_res$total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$total,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-    print(paste("Proportion mediated:",format(round(median(prop1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop1,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-    output = list(indirect = sim_res$indirect1, direct = sim_res$direct, total = sim_res$total, prop1 = prop1, ymodel = yres, ymodel_te = yres_te, m1_model = m1res)
+    output = list(indirect1 = sim_res$indirect1, direct = sim_res$direct, total = sim_res$total, prop1 = prop1, ymodel = yres, ymodel_te = yres_te, m1_model = m1res)
 
     return(output)
   }else if (length(med) == 2) {
 
     prop1 = sim_res$indirect1/sim_res$total
     prop2 = sim_res$indirect2/sim_res$total
-
-    print("Results")
-    print(paste("Indirect effect through M1:",format(round(mean(sim_res$indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Indirect effect through M2:",format(round(mean(sim_res$indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect2,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Direct effect:",format(round(mean(sim_res$direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-    print(paste("Interaction effect:",format(round(mean(sim_res$interaction), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$interaction,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$interaction,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Dependence:",format(round(mean(sim_res$dependence), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$dependence,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$dependence,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-    print(paste("Total effect:",format(round(mean(sim_res$total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$total,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-    print(paste("Proportion mediated through M1:",format(round(median(prop1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop1,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Proportion mediated through M2:",format(round(median(prop2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop2,1-(1-conf.level)/2),3), nsmall = 3),")"))
 
     output = list(direct = sim_res$direct, indirect1 = sim_res$indirect1, indirect2 = sim_res$indirect2, dependence = sim_res$dependence, interaction = sim_res$interaction, total = sim_res$total, prop1 = prop1, prop2 = prop2, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, m2_model_cond = m2res_cond, m2_model = m2res_marg)
     return(output)
@@ -699,17 +678,6 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
     prop1 = sim_res$indirect1/sim_res$total
     prop2 = sim_res$indirect2/sim_res$total
     prop3 = sim_res$indirect3/sim_res$total
-
-    print("Results")
-    print(paste("Indirect effect through M1:",format(round(mean(sim_res$indirect1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect1,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Indirect effect through M2:",format(round(mean(sim_res$indirect2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect2,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Indirect effect through M3:",format(round(mean(sim_res$indirect3), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$indirect3,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$indirect3,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Direct effect:",format(round(mean(sim_res$direct), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$direct,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$direct,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Total effect:",format(round(mean(sim_res$total), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(sim_res$total,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(sim_res$total,1-(1-conf.level)/2),3), nsmall = 3),")"))
-
-    print(paste("Proportion mediated through M1:",format(round(median(prop1), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop1,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop1,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Proportion mediated through M2:",format(round(median(prop2), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop2,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop2,1-(1-conf.level)/2),3), nsmall = 3),")"))
-    print(paste("Proportion mediated through M3:",format(round(median(prop3), 3), nsmall = 3),"; ", conf.level*100,"% CI: (", format(round(quantile(prop3,(1-conf.level)/2),3), nsmall = 3),", ", format(round(quantile(prop3,1-(1-conf.level)/2),3), nsmall = 3),")"))
 
     output = list(direct = sim_res$direct, indirect1 = sim_res$indirect1, indirect2 = sim_res$indirect2, indirect3 = sim_res$indirect3, total = sim_res$total, prop1 = prop1, prop2 = prop2, prop3 = prop3, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, m2_model_cond = m2res_cond, m2_model = m2res_marg, m3_model = m3res_marg, m3_model_cond_m1 = m3res_cond_m1, m3_model_cond_m2 = m3res_cond_m2, m3_model_cond_m1m2 = m3res_cond_m1m2)
     return(output)

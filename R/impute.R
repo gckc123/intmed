@@ -18,7 +18,7 @@ mi_prepare_impute <- function(fo, data, maxit = 20) {
   }
 
   mi_formulas <- mice::name.formulas(mi_formulas)
-  max_missing_perc <- max(sapply(lapply(df, is.na), sum)/nrow(df)*100)
+  max_missing_perc <- sum(ifelse(rowSums(as.data.frame(lapply(df, is.na))) == 0, 0 ,1))/nrow(df)*100
 
   if (max_missing_perc > 0 & max_missing_perc < 5) {
     max_missing_perc = 5

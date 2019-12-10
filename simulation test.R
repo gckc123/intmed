@@ -42,6 +42,25 @@ m1 = 0.4*x + 0.5*m2 + rnorm(n, 0, 0.3)
 y = 0.8*x + 0.25*m1 + 0.35*m2 + 0.3*m1*m2 +rnorm(n, 0, 0.1)
 simdata <- data.frame(x, m1, m2cat,y, m2)
 
+y = "y"
+med =c("m1","m2cat")
+treat = "x"
+mod = NULL
+c = NULL
+moc = NULL
+ymodel = "regression"
+mmodel = c("regression","logistic regression")
+incint = NULL
+inc_mmint = TRUE
+data = simdata
+sim = 1000
+treat_lv = 1
+control_lv = 0
+out_scale = "difference"
+complete_analysis = FALSE
+conf.level = 0.95
+digits = 2
+
 ff <- mediate(y = "y", med = c("m1", "m2cat"), treat = "x", c = NULL, ymodel = "regression", mmodel = c("regression","logistic regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = simdata, sim = 1000)
 ff <- medi(y = "y", med = c("m1", "m2cat"), treat = "x", c = NULL, ymodel = "regression", mmodel = c("regression","logistic regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = simdata, sim = 1000)
 ff <- medi(y = "y", med = c("m1", "m2"), treat = "x", c = NULL, ymodel = "regression", mmodel = c("regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = simdata, sim = 1000)

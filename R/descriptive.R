@@ -95,7 +95,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
 
 
     if (length(df[,sapply(df, is.numeric)]) > 0) {
-      html_output <- "<h4>Table. Descriptive statistics of continuous variables</h4>"
+      html_output <- "<br/><b>Table. Descriptive statistics of continuous variables</b><br/>"
       html_output <- c(html_output, "<table style=\"text-align:left\">")
       html_output <- c(html_output, "<tr><td colspan=\"6\" style=\"border-bottom: 1px solid black\"></td></tr>")
       for (k in 1:nrow(grouping_combo)) {
@@ -114,7 +114,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
     }
 
     if (length(df[,!sapply(df, is.numeric)]) > 0) {
-      html_output <- c(html_output, "<h4>Table. Descriptive statistics of categorical variables</h4>")
+      html_output <- c(html_output, "<br/><b>Table. Descriptive statistics of categorical variables</b><br/>")
       html_output <- c(html_output, "<table style=\"text-align:left\">")
       html_output <- c(html_output, paste0("<tr><td colspan=\"",length(Perc_list)*2+2,"\" style =\"border-bottom: 1px solid black\"></td></tr>"))
       tmp <- "<tr><td></td><td></td>"
@@ -152,7 +152,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
       Median <- format(round(sapply(dfnumeric, median, na.rm = TRUE), digits), nsmall = digits)
       IQR <- format(round(sapply(dfnumeric, stats::IQR, na.rm = TRUE), digits), nsmall = digits)
 
-      html_output <- "<h3>Table. Descriptive statistics of continuous variables</h3>"
+      html_output <- "<br/><b>Table. Descriptive statistics of continuous variables</b><br/>"
       html_output <- c(html_output, "<table style=\"text-align:left\">")
       html_output <- c(html_output, "<tr><td colspan=\"6\" style=\"border-bottom: 1px solid black\"></td></tr>")
       html_output <- c(html_output, "<tr><td style=\"padding-right: 1em\">Variables</td><td style=\"padding-right: 1em\">N</td><td style=\"padding-right: 1em\">Mean</td><td style=\"padding-right: 1em\">SD</td><td style=\"padding-right: 1em\">Median</td><td style=\"padding-right: 1em\">IQR</td></tr>")
@@ -183,7 +183,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
           Levels <- c(Levels, names(table(dfnonnumeric[i])))
         }
       }
-      html_output <- c(html_output, "<h3>Table. Descriptive statistics of categorical variables</h3>")
+      html_output <- c(html_output, "<br/><b>Table. Descriptive statistics of categorical variables</b><br/>")
       html_output <- c(html_output, "<table style=\"text-align:left\">")
       html_output <- c(html_output, "<tr><td colspan=\"4\" style =\"border-bottom: 1px solid black\"></td></tr>")
       html_output <- c(html_output, "<tr><td style=\"padding-right: 1em\">Variables</td><td style=\"padding-right: 1em\">Levels</td><td style=\"padding-right: 1em\">N</td><td style=\"padding-right: 1em\">%</td>")
@@ -199,8 +199,8 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
       html_output <- c(html_output, "</table>")
     }
   }
-  sink("descriptive.html")
-  cat(html_output)
-  sink()
+  #sink("descriptive.html")
+  #cat(html_output)
+  #sink()
   return(html_output)
 }
