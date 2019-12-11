@@ -142,8 +142,8 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
       results$combined = list(indirect = list(results$individual$indirect1, results$individual$indirect2, results$individual$indirect2), direct = results$individual$direct, total = results$individual$total, prop = list(results$individual$prop1, results$individual$prop2, results$individual$prop3), interaction = NULL, dependence = NULL)
     }
   }
-  results$model_summary <- gen_med_reg_table(y_res = results$y_pooled_res, m_res = results$m_pooled_res, conf.level = conf.level, digits = digits)
-  model_summary_html <- gen_med_reg_html(results$model_summary, y, med, conf.level)
+  results$model_summary <- gen_med_reg_table(y_res = results$y_pooled_res, m_res = results$m_pooled_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
+  model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, ymodel = ymodel, mmodel = mmodel, conf.level)
   mediation_res_html <- gen_med_table_html(med_res = results$combined, med = med, conf.level = conf.level, digits = digits)
 
   tmp_text <- "<br/> The table below shows the descriptive statistics of all analyses variables."

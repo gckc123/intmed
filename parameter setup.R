@@ -245,7 +245,7 @@ conf.level = 0.95
 digits = 3
 
 
-ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol","conflict"), treat = "supervision",  ymodel = "poisson regression", mmodel = c("poisson regression","regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = alcohol, sim = 1000, out_scale = "difference", digits = 3)
+ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol","conflict"), treat = "supervision",  ymodel = "poisson regression", mmodel = c("poisson regression","logistic regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = alcohol, sim = 1000, out_scale = "difference", digits = 3)
 
 y = "heavyalcohol"
 med =c("peer")
