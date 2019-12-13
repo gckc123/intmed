@@ -143,7 +143,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
     }
   }
   results$model_summary <- gen_med_reg_table(y_res = results$y_pooled_res, m_res = results$m_pooled_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
-  model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, ymodel = ymodel, mmodel = mmodel, conf.level)
+  model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, ymodel = ymodel, mmodel = mmodel, incint = incint, inc_mmint = inc_mmint, conf.level)
   mediation_res_html <- gen_med_table_html(med_res = results$combined, med = med, conf.level = conf.level, digits = digits)
 
   tmp_text <- "<br/> The table below shows the descriptive statistics of all analyses variables."

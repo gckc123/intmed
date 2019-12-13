@@ -245,7 +245,7 @@ conf.level = 0.95
 digits = 3
 
 
-ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol","conflict"), treat = "supervision",  ymodel = "poisson regression", mmodel = c("poisson regression","logistic regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = alcohol, sim = 1000, out_scale = "difference", digits = 3)
+
 
 y = "heavyalcohol"
 med =c("peer")
@@ -266,7 +266,7 @@ complete_analysis = FALSE
 conf.level = 0.95
 digits = 2
 
-ff <- mediate(y = "heavyalcohol", med = c("peer"), treat = "supervision", c = "alcohol", ymodel = "regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = alcohol, sim = 1000, out_scale = "difference")
+ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol","conflict"), treat = "supervision", c = "alcohol", ymodel = "regression", mmodel = c("regression","logistic regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = alcohol, sim = 1000, out_scale = "difference")
 
 #parallel computing vs old mediaiton package
 example_data <- tibble::add_column(example_data, missing = rowSums(sapply(example_data, is.na)))
@@ -294,3 +294,5 @@ ff <- medi(y = "heavyalcohol", med = c("peer", "conflict"), treat = "supervision
 mediate_package_res <- mediation::mediate(ff$m1_model, ff$ymodel, sims = 5000, treat = "supervision", mediator = "peer")
 summary(mediate_package_res)
 
+ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol","conflict"), treat = "supervision",  ymodel = "poisson regression", mmodel = c("poisson regression","regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = alcohol, sim = 1000, out_scale = "difference", digits = 3)
+ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol","conflict"), treat = "supervision",  ymodel = "poisson regression", mmodel = c("poisson regression","regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 1000, out_scale = "difference", digits = 2)

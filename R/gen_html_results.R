@@ -1,13 +1,16 @@
-gen_med_reg_html <- function(res_df, y, med, treat, ymodel, mmodel, conf.level = 0.95) {
+gen_med_reg_html <- function(res_df, y, med, treat, ymodel, mmodel, incint = NULL, inc_mmint = FALSE, conf.level = 0.95) {
   html_output = "<br/>Mediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020). The table below shows the estimates from the key regression models for the mediation analysis.<br/>"
 
   alpha_lv = 1-conf.level
   coeff_lab = rep("b", length(med)+1)
 
+  html_line = paste0("<br/>The mediator ", ifelse(length(med) > 1, "models ", "model ") ,"indicated that the exposure variable, ", treat,", was ")
+  html_output = paste0(html_output, html_line)
+
   html_line = "<ul>"
   for (i in 1:length(med)) {
     html_line = paste0(html_line, "<li>")
-    tmp = paste0("The exposure variable, ",treat,", is ", ifelse(res_df[res_df$variables == treat,3*i+1] < alpha_lv, "significantly ","not significantly "), "associated with the mediator, ", med[[i]],", ")
+    tmp = paste0(ifelse(res_df[res_df$variables == treat,3*i+1] < alpha_lv, "significantly ","not significantly "), "associated with the mediator, ", med[[i]],", ")
     html_line = paste0(html_line, tmp)
 
     if (mmodel[[i]] == "logistic regression") {
@@ -24,20 +27,35 @@ gen_med_reg_html <- function(res_df, y, med, treat, ymodel, mmodel, conf.level =
 
   html_output = paste0(html_output, html_line)
 
-  html_output = c(html_output,"<br/><b>Table. Results from key regression analyses.</b><br/>")
-  html_output = c(html_output, "<table style = \"text-align: left;border-bottom: 1px solid black; border-top: 1px solid black;\" cellspacing=\"0\" cellpadding = \"2\">")
-  html_line = "<tr><td></td>"
-
-
-
-  for (i in 1:length(med)) {
-    html_line = paste0(html_line,"<td colspan = \"3\">",med[i],"</td>")
-  }
-
   if (ymodel == "logistic regression") {
     coeff_lab[length(med)+1] = "OR"
   }else if (ymodel == "poisson regression") {
     coeff_lab[length(med)+1] = "IRR"
+  }
+
+  if (is.null(incint)) {
+    html_line = paste0("After accounting for the effects of the ", ifelse(length(med) > 1, "mediators ", "mediator "), ", the outcome model indicated that the treatment variable, ", treat, ", was ")
+    html_line = paste0(html_line, ifelse(res_df[res_df$variables == treat,3*length(med)+4] < alpha_lv, "significantly ","not significantly "),"associated with ", y, ", ")
+    html_line = paste0(html_line, coeff_lab[length(med)+1], " = ", stringr::str_replace_all(res_df[res_df$variables == treat, 3*length(med)+2],"\\*",""),", ", round(conf.level*100, 0), "% CI = ", res_df[res_df$variables == treat, 3*length(med)+3],"." )
+    html_output = paste0(html_output, html_line, "<br/>")
+  }
+
+  if (is.null(incint) && inc_mmint == FALSE) {
+    html_line = "The outcome model also indicated that <ul>"
+    for (i in 1:length(med)) {
+      html_line = paste0(html_line, "<li>",med[i]," is ", ifelse(res_df[res_df$variables == med[i],3*length(med)+4] < alpha_lv, "significantly ","not significantly "), "associated with the outcome, ", y, ", ")
+      html_line = paste0(html_line, coeff_lab[length(med)+1], " = ", stringr::str_replace_all(res_df[res_df$variables == med[i],3*length(med)+2],"\\*",""), ", ", round(conf.level*100,0),"% CI = ", res_df[res_df$variables == med[i],3*length(med)+3],". </li>")
+    }
+    html_line = paste0(html_line, "</ul>")
+    html_output = paste0(html_output, html_line)
+  }
+
+  html_output = c(html_output,"<br/><b>Table. Results from key regression analyses.</b><br/>")
+  html_output = c(html_output, "<table style = \"text-align: left;border-bottom: 1px solid black; border-top: 1px solid black;\" cellspacing=\"0\" cellpadding = \"2\">")
+  html_line = "<tr><td></td>"
+
+  for (i in 1:length(med)) {
+    html_line = paste0(html_line,"<td colspan = \"3\">",med[i],"</td>")
   }
 
   html_line = paste0(html_line, "<td colspan = \"3\">", y,"</td></tr>")
@@ -109,14 +127,12 @@ gen_med_table_html <- function(med_res, med, conf.level = 0.95, digits = 2) {
 
 gen_med_reg_table <- function(y_res, m_res, med, ymodel, mmodel, conf.level = 0.95, digits = 2) {
 
-  table <- extract_reg_table(m_res[[1]], mmodel[[1]], conf.level)
+  table <- extract_reg_table(m_res[[1]], mmodel[[1]], conf.level, digits = digits)
   colnames(table) <- c("variables", "m1.b","m1.ci","m1.p")
 
   if (length(m_res) > 1) {
     for (i in 2:length(m_res)) {
-
-      #need to fix this 6.12.2019
-      tmp <- extract_reg_table(m_res[[i]], mmodel[[i]], conf.level)
+      tmp <- extract_reg_table(m_res[[i]], mmodel[[i]], conf.level, digits =  digits)
       colnames(tmp) <- c("variables", paste0("m",i,".b"), paste0("m",i,".ci"), paste0("m",i,".p"))
       table <- merge(table, tmp, by = "variables", all = TRUE)
     }
@@ -177,4 +193,8 @@ extract_reg_table <- function(res, model, conf.level = 0.95, digits = 2) {
   table$variables <- rownames(table)
   table <- table[,c("variables","estimate","ci","p.value")]
   return(table)
+}
+
+empirical_pvalue <- function(vec) {
+
 }
