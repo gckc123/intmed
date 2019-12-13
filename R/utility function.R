@@ -10,3 +10,11 @@ extract_analysis_vars <- function(data, fo, ...) {
   df <- df[, fo_vars]
   return(df)
 }
+
+empirical_pvalue <- function(vec) {
+  gtzero <- ifelse(vec > 0, 1, 0)
+  p <- sum(gtzero)/length(gtzero)
+  p <- ifelse(p > 0.5, 1-p, p)
+  p <- 2*p
+  return(p)
+}

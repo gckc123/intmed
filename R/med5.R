@@ -151,7 +151,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
     if (complete_analysis == TRUE) {
       tmp_text <- paste(tmp_text, "There were ", round(max_missing_perc,2),"% cases with missing data. Complete case analysis wass used for the subsequent mediation analysis.")
     }else {
-      tmp_text <- paste(tmp_text, "There were ", round(max_missing_perc,2),"% cases with missing data. Multiple imputation was used to impute missing data and ", mi_prepare_obj$m, "datasets were imputed.")
+      tmp_text <- paste(tmp_text, "There were ", round(max_missing_perc,2),"% cases with missing data. Multiple imputation was used to impute missing data (Rubin, 2004) and ", mi_prepare_obj$m, "datasets were imputed using the R package MICE (van Buuren, 2011).")
     }
   }
   tmp_text <- paste(tmp_text, "<br/>")
