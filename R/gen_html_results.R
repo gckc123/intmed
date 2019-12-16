@@ -1,5 +1,5 @@
-gen_med_reg_html <- function(res_df, y, med, treat, ymodel, mmodel, incint = NULL, inc_mmint = FALSE, conf.level = 0.95) {
-  html_output = "<br/>Mediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020). The table below shows the estimates from the key regression models for the mediation analysis.<br/>"
+gen_med_reg_html <- function(res_df, y, med, treat, c, ymodel, mmodel, incint = NULL, inc_mmint = FALSE, conf.level = 0.95) {
+  html_output = "<br/><h4><u>Regression analysis</u></h4>The table below shows the estimates from the key regression models for the mediation analysis.<br/>"
 
   alpha_lv = 1-conf.level
   coeff_lab = rep("b", length(med)+1)
@@ -79,6 +79,8 @@ gen_med_reg_html <- function(res_df, y, med, treat, ymodel, mmodel, incint = NUL
 }
 
 gen_med_table_html <- function(med_res, med, conf.level = 0.95, digits = 2) {
+  res_des = "<br/><h4><u>Mediation analysis</u></h4>Mediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020). <br/> Results from the mediation analysis indicated that <ul>"
+  alpha_level = 1-conf.level
   html_output = "<br/><b>Table. Mediation analysis results.</b><br/>"
   html_output = c(html_output, "<table style = \"text-align: left;border-bottom: 1px solid black; border-top: 1px solid black;\" cellspacing=\"0\" cellpadding = \"2\">")
   html_line = paste0("<tr><td style=\"padding-right: 1em;border-bottom: 1px solid black;\"></td><td style=\"padding-right: 1em;border-bottom: 1px solid black;\">Estimates</td><td style=\"padding-right: 1em;border-bottom: 1px solid black;\">",round(conf.level*100, 0),"% CI</td><td style=\"padding-right: 1em;border-bottom: 1px solid black;\">p-value</td></tr>")
@@ -88,50 +90,62 @@ gen_med_table_html <- function(med_res, med, conf.level = 0.95, digits = 2) {
     estimate <- mean(med_res$indirect[[i]])
     ci <- quantile(med_res$indirect[[i]], c((1-conf.level)/2,1-(1-conf.level)/2))
     pvalue <- empirical_pvalue(med_res$indirect[[i]])
-    #pvalue <- format(round(pvalue,3), nsmall = 3)
-    html_line <- paste0("<tr><td style=\"padding-right: 1em\">Indirect effect mediated through ", med[i],"</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",pvalue,"</td></tr>")
+    formatted_p <- format(round(pvalue,3), nsmall = 3)
+    html_line <- paste0("<tr><td style=\"padding-right: 1em\">Indirect effect mediated through ", med[i],"</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",formatted_p,"</td></tr>")
     html_output = c(html_output, html_line)
+    res_des_line = paste0("<li> the indirect effect through",med[i], "was", ifelse(pvalue < alpha_level, "statistically significant","non-signifcant"),", p = ",formatted_p,"; ")
+    res_des_line = paste0(res_des_line, format(round(median(med_res$prop[[i]])*100, digits = digits),nsmall = digits), "% of the total effect was mediated through ", med[i], ".</li>")
+    res_des = c(res_des, res_des_line)
+
   }
 
   if (!is.null(med_res$dependence)) {
     estimate <- mean(med_res$dependence)
     ci <- quantile(med_res$dependence, c((1-conf.level)/2,1-(1-conf.level)/2))
     pvalue <- empirical_pvalue(med_res$dependence)
-    #pvalue <- format(round(pvalue,3), nsmall = 3)
-    html_line <- paste0("<tr><td style=\"padding-right: 1em\">Indirect effect mediated through the dependence between mediators</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",pvalue,"</td></tr>")
+    formatted_p <- format(round(pvalue,3), nsmall = 3)
+    html_line <- paste0("<tr><td style=\"padding-right: 1em\">Indirect effect mediated through the dependence between mediators</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",formatted_p,"</td></tr>")
     html_output = c(html_output, html_line)
+    res_des = c(res_des, paste0("<li> the indirect effect through the dependence between mediators was ", ifelse(pvalue < alpha_level, "statistically significant","non-signifcant"),", p = ",pvalue,".</li>"))
   }
 
   if (!is.null(med_res$interaction)) {
     estimate <- mean(med_res$interaction)
     ci <- quantile(med_res$interaction, c((1-conf.level)/2,1-(1-conf.level)/2))
     pvalue <- empirical_pvalue(med_res$interaction)
-    #pvalue <- format(round(pvalue,3), nsmall = 3)
-    html_line <- paste0("<tr><td style=\"padding-right: 1em\">Indirect effect mediated through the interaction between mediators</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",pvalue,"</td></tr>")
+    formatted_p <- format(round(pvalue,3), nsmall = 3)
+    html_line <- paste0("<tr><td style=\"padding-right: 1em\">Indirect effect mediated through the interaction between mediators</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",formatted_p,"</td></tr>")
     html_output = c(html_output, html_line)
+    res_des = c(res_des, paste0("<li> the indirect effect through the interaction between mediators was ", ifelse(pvalue < alpha_level, "statistically significant","non-signifcant"),", p = ",formatted_p,".</li>"))
   }
 
   estimate <- mean(med_res$direct)
   ci <- quantile(med_res$direct, c((1-conf.level)/2,1-(1-conf.level)/2))
   pvalue <- empirical_pvalue(med_res$direct)
-  #pvalue <- format(round(pvalue,3), nsmall = 3)
-  html_line <- paste0("<tr><td style=\"padding-right: 1em\">Direct effect</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",pvalue,"</td></tr>")
+  formatted_p <- format(round(pvalue,3), nsmall = 3)
+  html_line <- paste0("<tr><td style=\"padding-right: 1em\">Direct effect</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",formatted_p,"</td></tr>")
   html_output = c(html_output, html_line)
+  res_des = c(res_des, paste0("<li> the direct effect was ", ifelse(pvalue < alpha_level, "statistically significant","non-signifcant"),", p = ",formatted_p,".</li>"))
 
   estimate <- mean(med_res$total)
   ci <- quantile(med_res$total, c((1-conf.level)/2,1-(1-conf.level)/2))
   pvalue <- empirical_pvalue(med_res$total)
-  #pvalue <- format(round(pvalue,3), nsmall = 3)
-  html_line <- paste0("<tr><td style=\"padding-right: 1em\">Total effect</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",pvalue,"</td></tr>")
+  formatted_p <- format(round(pvalue,3), nsmall = 3)
+  html_line <- paste0("<tr><td style=\"padding-right: 1em\">Total effect</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",formatted_p,"</td></tr>")
   html_output = c(html_output, html_line)
+  res_des = c(res_des, paste0("<li> the total effect was ", ifelse(pvalue < alpha_level, "statistically significant","non-signifcant"),", p = ",formatted_p,".</li>"))
 
   for (i in 1:length(med_res$prop)) {
     estimate <- median(med_res$prop[[i]])
     ci <- quantile(med_res$prop[[i]], c((1-conf.level)/2,1-(1-conf.level)/2))
     pvalue <- "-"
-    html_line <- paste0("<tr><td style=\"padding-right: 1em\">Proportion of effect mediated through ", med[i],"</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",pvalue,"</td></tr>")
+    html_line <- paste0("<tr><td style=\"padding-right: 1em\">Proportion of effect mediated through ", med[i],"</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td></td></tr>")
     html_output = c(html_output, html_line)
   }
+  html_output <- c(html_output, "</table>")
+  html_output <- c(html_output, "***<i>p</i> < .001;**<i>p</i> < .05***<i>p</i> < .05.")
+  res_des <- c(res_des, "</ul>")
+  html_output <- c(res_des, html_output)
 
   return(html_output)
 }

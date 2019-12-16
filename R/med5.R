@@ -143,10 +143,10 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
     }
   }
   results$model_summary <- gen_med_reg_table(y_res = results$y_pooled_res, m_res = results$m_pooled_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
-  model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, ymodel = ymodel, mmodel = mmodel, incint = incint, inc_mmint = inc_mmint, conf.level)
+  model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, c = c, ymodel = ymodel, mmodel = mmodel, incint = incint, inc_mmint = inc_mmint, conf.level)
   mediation_res_html <- gen_med_table_html(med_res = results$combined, med = med, conf.level = conf.level, digits = digits)
 
-  tmp_text <- "<br/> The table below shows the descriptive statistics of all analyses variables."
+  tmp_text <- "<h4><u>Descriptive statistics</u></h4> The table below shows the descriptive statistics of all analyses variables."
   if (max_missing_perc > 0) {
     if (complete_analysis == TRUE) {
       tmp_text <- paste(tmp_text, "There were ", round(max_missing_perc,2),"% cases with missing data. Complete case analysis wass used for the subsequent mediation analysis.")
@@ -160,9 +160,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
 
   results$res_html <- c(results$res_html, model_summary_html)
 
-  tmp_text <- "<br/> The table below shows the indirect, direct and total effects. <br/>"
-
-  results$res_html <- c(results$res_html, tmp_text, mediation_res_html)
+  results$res_html <- c(results$res_html, mediation_res_html)
 
   sink("res.html")
   cat(results$res_html)
@@ -176,7 +174,11 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
   data <- tibble::add_column(data, missing = rowSums(sapply(data, is.na)))
   data <- data[data$missing == 0, 1:length(data)-1]
 
-  doParallel::registerDoParallel(cores = parallel::detectCores())
+  no_cores = parallel::detectCores() - 1
+  cl <- parallel::makeCluster(no_cores, outfile=paste0('./info_parallel.log'))
+
+
+  doParallel::registerDoParallel(cl)
   m2_modelformula = NULL
   m2_modelformula_cond = NULL
   m2res = NULL
@@ -655,7 +657,7 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
       generate_estimates(data.frame(y_0000_cond_m1m2m3, y_1000_cond_m1m2m3, y_1100_cond_m2m3, y_1000_cond_m2m3, y_1010_cond_m1m3, y_1000_cond_m1m3, y_1001_cond_m1m2, y_1000_cond_m1m2, y_1111_cond_m1m2m3, y0, y1), ymodel, out_scale = out_scale)
     }
   }
-  doParallel::stopImplicitCluster()
+  parallel::stopCluster(cl)
 
   sim_res = as.data.frame(sim_res)
 
