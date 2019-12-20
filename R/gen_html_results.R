@@ -50,6 +50,16 @@ gen_med_reg_html <- function(res_df, y, med, treat, c, ymodel, mmodel, incint = 
     html_output = paste0(html_output, html_line)
   }
 
+  if (!is.null(c)) {
+    if (length(c) == 1) {
+      html_line = paste0("The effect of ", c," was adjusted for in the above analyses. <br/>")
+    }else {
+      tmp = paste(paste0(c[1:length(c)-1], collapse = ", "), c[length(c)], sep = " and ")
+      html_line = paste0("The effect of ", tmp," were adjusted for in the above analyses. <br/>")
+    }
+    html_output = paste0(html_output, html_line)
+  }
+
   html_output = c(html_output,"<br/><b>Table. Results from key regression analyses.</b><br/>")
   html_output = c(html_output, "<table style = \"text-align: left;border-bottom: 1px solid black; border-top: 1px solid black;\" cellspacing=\"0\" cellpadding = \"2\">")
   html_line = "<tr><td></td>"
@@ -93,7 +103,7 @@ gen_med_table_html <- function(med_res, med, conf.level = 0.95, digits = 2) {
     formatted_p <- format(round(pvalue,3), nsmall = 3)
     html_line <- paste0("<tr><td style=\"padding-right: 1em\">Indirect effect mediated through ", med[i],"</td><td style=\"padding-right: 1em\">", format(round(estimate, digits), nsmall = digits),ifelse(pvalue < 0.05,"*",""),ifelse(pvalue < 0.01,"*",""),ifelse(pvalue < 0.001,"*",""),"</td><td style=\"padding-right: 1em\">(",format(round(ci[1], digits), nsmall = digits),", ",format(round(ci[2], digits), nsmall = digits),")</td><td>",formatted_p,"</td></tr>")
     html_output = c(html_output, html_line)
-    res_des_line = paste0("<li> the indirect effect through",med[i], "was", ifelse(pvalue < alpha_level, "statistically significant","non-signifcant"),", p = ",formatted_p,"; ")
+    res_des_line = paste0("<li> the indirect effect through ",med[i], " was ", ifelse(pvalue < alpha_level, "statistically significant","non-signifcant"),", p = ",formatted_p,"; ")
     res_des_line = paste0(res_des_line, format(round(median(med_res$prop[[i]])*100, digits = digits),nsmall = digits), "% of the total effect was mediated through ", med[i], ".</li>")
     res_des = c(res_des, res_des_line)
 

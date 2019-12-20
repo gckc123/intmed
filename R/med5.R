@@ -142,11 +142,11 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
       results$combined = list(indirect = list(results$individual$indirect1, results$individual$indirect2, results$individual$indirect2), direct = results$individual$direct, total = results$individual$total, prop = list(results$individual$prop1, results$individual$prop2, results$individual$prop3), interaction = NULL, dependence = NULL)
     }
   }
-  results$model_summary <- gen_med_reg_table(y_res = results$y_pooled_res, m_res = results$m_pooled_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
+  results$model_summary <- gen_med_reg_table(y_res = results$individual$ymodel, m_res = m_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
   model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, c = c, ymodel = ymodel, mmodel = mmodel, incint = incint, inc_mmint = inc_mmint, conf.level)
   mediation_res_html <- gen_med_table_html(med_res = results$combined, med = med, conf.level = conf.level, digits = digits)
 
-  tmp_text <- "<h4><u>Descriptive statistics</u></h4> The table below shows the descriptive statistics of all analyses variables."
+  tmp_text <- paste0("<h4><u>Descriptive statistics</u></h4> The table below shows the descriptive statistics of all analyses variables. The overall sample size is ",nrow(data),". ")
   if (max_missing_perc > 0) {
     if (complete_analysis == TRUE) {
       tmp_text <- paste(tmp_text, "There were ", round(max_missing_perc,2),"% cases with missing data. Complete case analysis wass used for the subsequent mediation analysis.")

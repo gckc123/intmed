@@ -247,24 +247,7 @@ digits = 3
 
 
 
-y = "heavyalcohol"
-med =c("peer")
-treat = "supervision"
-mod = NULL
-c = "conflict"
-moc = NULL
-ymodel = "poisson regression"
-mmodel = c("regression")
-incint = NULL
-inc_mmint = FALSE
-data = alcohol
-sim = 1000
-treat_lv = 1
-control_lv = 0
-out_scale = "difference"
-complete_analysis = FALSE
-conf.level = 0.95
-digits = 2
+
 
 ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol","conflict"), treat = "supervision", c = "alcohol", ymodel = "regression", mmodel = c("regression","logistic regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = alcohol, sim = 1000, out_scale = "difference")
 
@@ -298,4 +281,42 @@ ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol","conflict"), treat = 
 ff <- mediate(y = "heavyalcohol", med = c("peer","alcohol","conflict"), treat = "supervision",  ymodel = "poisson regression", mmodel = c("poisson regression","regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 10000, out_scale = "difference", digits = 2)
 
 
-ff <- mediate(y = "heavyalcohol", med = c("peer","conflict"), treat = "supervision",  ymodel = "poisson regression", mmodel = c("poisson regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 10000, out_scale = "difference", digits = 3)
+
+ff <- mediate(y = "heavyalcohol", med = c("peer"), treat = "supervision",  ymodel = "poisson regression", c = c("conflict", "alcohol"), mmodel = c("poisson regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 10000, out_scale = "difference", digits = 3)
+
+alcohol1 <- tibble::add_column(alcohol, missing = rowSums(sapply(alcohol, is.na)))
+alcohol1 <- alcohol1[alcohol1$missing == 0, 1:length(alcohol1)-1]
+
+y = "heavyalcohol2"
+med =c("peer")
+treat = "alcohol2"
+mod = NULL
+c = NULL
+moc = NULL
+ymodel = "logistic regression"
+mmodel = c("regression")
+incint = NULL
+inc_mmint = FALSE
+data = alcohol1
+sim = 1000
+treat_lv = 1
+control_lv = 0
+out_scale = "difference"
+complete_analysis = FALSE
+conf.level = 0.95
+digits = 3
+
+
+ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer"), treat = "alcohol2", c = "conflict", ymodel = "logistic regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol1, sim = 10000, out_scale = "difference", digits = 3)
+
+yres <- glm(heavyalcohol2 ~ alcohol2+peer+conflict, family = "binomial", data = alcohol1)
+m1res <- lm(peer ~ alcohol2+conflict, data = alcohol1)
+mediate_package_res <- mediation::mediate(m1res, yres, sims = 10000, treat = "alcohol2", mediator = "peer", data = alcohol1)
+summary(mediate_package_res)
+
+ff <- intmed::mediate(y = "heavyalcohol", med = c("peer"), treat = "alcohol2", c = "conflict", ymodel = "poisson regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol1, sim = 10000, out_scale = "difference", digits = 3)
+
+yres <- glm(heavyalcohol ~ alcohol2+peer+conflict, family = "poisson", data = alcohol1)
+m1res <- lm(peer ~ alcohol2+conflict, data = alcohol1)
+mediate_package_res <- mediation::mediate(m1res, yres, sims = 10000, treat = "alcohol2", mediator = "peer", data = alcohol1)
+summary(mediate_package_res)

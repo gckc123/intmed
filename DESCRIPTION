@@ -17,5 +17,6 @@ Depends:
     parallel,
     mice,
     doParallel,
-    rmarkdown
+    rmarkdown,
+    EValue
 RoxygenNote: 7.0.1
