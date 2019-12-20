@@ -126,7 +126,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
       expr = parse(text = paste0("indirect_list[[i]] = indirect",i))
       eval(expr)
     }
-
+    results$model_summary <- gen_med_reg_table(y_res = results$y_pooled_res, m_res = results$m_pooled_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
   }else {
     results$individual = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = data, sim = sim, conf.level = conf.level, out_scale = out_scale)
     for (i  in 1:length(med)) {
@@ -141,8 +141,9 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
     }else if (length(med) == 3) {
       results$combined = list(indirect = list(results$individual$indirect1, results$individual$indirect2, results$individual$indirect2), direct = results$individual$direct, total = results$individual$total, prop = list(results$individual$prop1, results$individual$prop2, results$individual$prop3), interaction = NULL, dependence = NULL)
     }
+    results$model_summary <- gen_med_reg_table(y_res = results$individual$ymodel, m_res = m_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
   }
-  results$model_summary <- gen_med_reg_table(y_res = results$individual$ymodel, m_res = m_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
+
   model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, c = c, ymodel = ymodel, mmodel = mmodel, incint = incint, inc_mmint = inc_mmint, conf.level)
   mediation_res_html <- gen_med_table_html(med_res = results$combined, med = med, conf.level = conf.level, digits = digits)
 
@@ -790,7 +791,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
         return(output)
 
       }else if (out_scale == "ratio") {
-        #Results in ratio scale seems to be problematic because of dependence between the effects
+        #Results in ratio scale seems to be problematic because of dependence between the direct and indirect effects
         est1 = (mean(ys$y_100_cond)/mean(1-ys$y_100_cond))/(mean(ys$y_000_cond)/mean(1-ys$y_000_cond))
         est2 = (mean(ys$y_110_marg)/mean(1-ys$y_110_marg))/(mean(ys$y_100_marg)/mean(1-ys$y_100_marg))
         est3 = (mean(ys$y_101_marg)/mean(1-ys$y_101_marg))/(mean(ys$y_100_marg)/mean(1-ys$y_100_marg))

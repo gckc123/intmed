@@ -307,7 +307,7 @@ conf.level = 0.95
 digits = 3
 
 
-ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer"), treat = "alcohol2", c = "conflict", ymodel = "logistic regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol1, sim = 10000, out_scale = "difference", digits = 3)
+ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer"), treat = "alcohol2", c = "conflict", ymodel = "logistic regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 10000, out_scale = "difference", digits = 3)
 
 yres <- glm(heavyalcohol2 ~ alcohol2+peer+conflict, family = "binomial", data = alcohol1)
 m1res <- lm(peer ~ alcohol2+conflict, data = alcohol1)
@@ -320,3 +320,5 @@ yres <- glm(heavyalcohol ~ alcohol2+peer+conflict, family = "poisson", data = al
 m1res <- lm(peer ~ alcohol2+conflict, data = alcohol1)
 mediate_package_res <- mediation::mediate(m1res, yres, sims = 10000, treat = "alcohol2", mediator = "peer", data = alcohol1)
 summary(mediate_package_res)
+
+ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer"), treat = "alcohol2", c = "conflict", ymodel = "logistic regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 1000, out_scale = "ratio", digits = 3)
