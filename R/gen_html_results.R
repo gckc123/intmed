@@ -1,4 +1,4 @@
-gen_med_reg_html <- function(res_df, y, med, treat, c, ymodel, mmodel, incint = NULL, inc_mmint = FALSE, conf.level = 0.95) {
+gen_med_reg_html <- function(res_df, y, med, treat, c, ymodel, mmodel, incint = NULL, inc_mmint = FALSE, conf.level = 0.95, data_head, treat_lv = NULL, control_lv = NULL) {
   html_output = "<br/><h4><u>Regression analysis</u></h4>The table below shows the estimates from the key regression models for the mediation analysis.<br/>"
 
   alpha_lv = 1-conf.level
@@ -6,11 +6,14 @@ gen_med_reg_html <- function(res_df, y, med, treat, c, ymodel, mmodel, incint = 
 
   html_line = paste0("<br/>The mediator ", ifelse(length(med) > 1, "models ", "model ") ,"indicated that the exposure variable, ", treat,", was ")
   html_output = paste0(html_output, html_line)
-
+  ##Stop here - need to take care of binary mediator and binary treatment 7.1.2020##
+  expr = parse(text = paste0("tmp = is.factor(data_head$",treat,")"))
+  eval(expr)
+  treat_row_name = ifelse(tmp,paste0(treat,treat_lv), treat)
   html_line = "<ul>"
   for (i in 1:length(med)) {
     html_line = paste0(html_line, "<li>")
-    tmp = paste0(ifelse(res_df[res_df$variables == treat,3*i+1] < alpha_lv, "significantly ","not significantly "), "associated with the mediator, ", med[[i]],", ")
+    tmp = paste0(ifelse(res_df[res_df$variables == treat_row_name,3*i+1] < alpha_lv, "significantly ","not significantly "), "associated with the mediator, ", med[[i]],", ")
     html_line = paste0(html_line, tmp)
 
     if (mmodel[[i]] == "logistic regression") {
@@ -19,7 +22,7 @@ gen_med_reg_html <- function(res_df, y, med, treat, c, ymodel, mmodel, incint = 
       coeff_lab[[i]] = "IRR"
     }
 
-    tmp = paste0(coeff_lab[i], " = ", stringr::str_replace_all(res_df[res_df$variables == treat, 3*(i-1)+2],"\\*",""),", ", round(conf.level*100, 0), "% CI = ", res_df[res_df$variables == treat, 3*(i-1)+3],"." )
+    tmp = paste0(coeff_lab[i], " = ", stringr::str_replace_all(res_df[res_df$variables == treat_row_name, 3*(i-1)+2],"\\*",""),", ", round(conf.level*100, 0), "% CI = ", res_df[res_df$variables == treat_row_name, 3*(i-1)+3],"." )
 
     html_line = paste0(html_line, tmp, "</li>")
   }
@@ -33,21 +36,35 @@ gen_med_reg_html <- function(res_df, y, med, treat, c, ymodel, mmodel, incint = 
     coeff_lab[length(med)+1] = "IRR"
   }
 
-  if (is.null(incint)) {
+  if (is.null(incint) | sum(incint) == 0) {
     html_line = paste0("After accounting for the effects of the ", ifelse(length(med) > 1, "mediators ", "mediator "), ", the outcome model indicated that the treatment variable, ", treat, ", was ")
-    html_line = paste0(html_line, ifelse(res_df[res_df$variables == treat,3*length(med)+4] < alpha_lv, "significantly ","not significantly "),"associated with ", y, ", ")
-    html_line = paste0(html_line, coeff_lab[length(med)+1], " = ", stringr::str_replace_all(res_df[res_df$variables == treat, 3*length(med)+2],"\\*",""),", ", round(conf.level*100, 0), "% CI = ", res_df[res_df$variables == treat, 3*length(med)+3],"." )
+    html_line = paste0(html_line, ifelse(res_df[res_df$variables == treat_row_name,3*length(med)+4] < alpha_lv, "significantly ","not significantly "),"associated with ", y, ", ")
+    html_line = paste0(html_line, coeff_lab[length(med)+1], " = ", stringr::str_replace_all(res_df[res_df$variables == treat_row_name, 3*length(med)+2],"\\*",""),", ", round(conf.level*100, 0), "% CI = ", res_df[res_df$variables == treat_row_name, 3*length(med)+3],"." )
     html_output = paste0(html_output, html_line, "<br/>")
-  }
-
-  if (is.null(incint) && inc_mmint == FALSE) {
-    html_line = "The outcome model also indicated that <ul>"
-    for (i in 1:length(med)) {
-      html_line = paste0(html_line, "<li>",med[i]," is ", ifelse(res_df[res_df$variables == med[i],3*length(med)+4] < alpha_lv, "significantly ","not significantly "), "associated with the outcome, ", y, ", ")
-      html_line = paste0(html_line, coeff_lab[length(med)+1], " = ", stringr::str_replace_all(res_df[res_df$variables == med[i],3*length(med)+2],"\\*",""), ", ", round(conf.level*100,0),"% CI = ", res_df[res_df$variables == med[i],3*length(med)+3],". </li>")
+    if (inc_mmint == FALSE) {
+      html_line = "The outcome model also indicated that <ul>"
+      for (i in 1:length(med)) {
+        expr = parse(text = paste0("tmp = is.factor(data_head$",med[i],")"))
+        eval(expr)
+        expr = parse(text = paste0("med_row_name = ifelse(tmp, paste0(med[i],tail(levels(data_head$",med[i],"),1)),med[i])"))
+        eval(expr)
+        html_line = paste0(html_line, "<li>",med[i]," is ", ifelse(res_df[res_df$variables == med_row_name,3*length(med)+4] < alpha_lv, "significantly ","not significantly "), "associated with the outcome, ", y, ", ")
+        html_line = paste0(html_line, coeff_lab[length(med)+1], " = ", stringr::str_replace_all(res_df[res_df$variables == med_row_name,3*length(med)+2],"\\*",""), ", ", round(conf.level*100,0),"% CI = ", res_df[res_df$variables == med_row_name,3*length(med)+3],". </li>")
+      }
+      html_line = paste0(html_line, "</ul>")
+      html_output = paste0(html_output, html_line)
+    }else {
+      html_line = "The outcome model includes the mediator-mediator interaction(s). The effect of the mediators and their interaction(s) are summarized in the three right-most columns in the table below. <br/>"
+      html_output = paste0(html_output, html_line)
     }
-    html_line = paste0(html_line, "</ul>")
-    html_output = paste0(html_output, html_line)
+  }else {
+    if (inc_mmint == TRUE) {
+      html_line = "The outcome model includes the treatment-mediator interaction(s) and also the mediator-mediator interaction(s). The effect of the treatment, mediator(s) and relevant interactions are summarized in the three right-most columns in the table below. <br/>"
+      html_output = paste0(html_output, html_line)
+    }else {
+      html_line = "The outcome model includes the treatment-mediator interaction(s). The effect of the treatment, mediator(s) and relevant interaction(s) are summarized in the three right-most columns in the table below. <br/>"
+      html_output = paste0(html_output, html_line)
+    }
   }
 
   if (!is.null(c)) {

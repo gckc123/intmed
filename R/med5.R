@@ -19,6 +19,10 @@
 
 
 mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, out_scale = "difference", complete_analysis = FALSE, digits = 2) {
+
+  #9.1.2020 In the middle of validating input
+  validate_input(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, sim = sim, conf.level = conf.level, out_scale = out_scale, complete_analysis = complete_analysis, digits = digits)
+
   y_modelformula <- build_ymodel_formula(y, med = med, treat = treat, ymodel = ymodel, data = data, c = c, mod = mod, incint = incint, inc_mmint = inc_mmint)
   fo_vars <- base::all.vars(y_modelformula)
   data <- extract_analysis_vars(data, y_modelformula)
@@ -27,10 +31,16 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
   descriptive_html <- descriptive(data = data, digits = digits, complete = complete_analysis)
 
   max_missing_perc <- sum(ifelse(rowSums(as.data.frame(lapply(data, is.na))) == 0, 0 ,1))/nrow(data)*100
-  #max_missing_perc <- max(sapply(lapply(data, is.na), sum)/nrow(data)*100)
+
   results = list()
   y_res = list()
   m_res = list()
+
+  if (length(med) == 1) {
+    inc_mmint = FALSE
+  }
+
+
 
   if (max_missing_perc > 0 & complete_analysis == FALSE) {
     mi_prepare_obj <- mi_prepare_impute(y_modelformula, data)
@@ -144,7 +154,10 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
     results$model_summary <- gen_med_reg_table(y_res = results$individual$ymodel, m_res = m_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
   }
 
-  model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, c = c, ymodel = ymodel, mmodel = mmodel, incint = incint, inc_mmint = inc_mmint, conf.level)
+  ##Stop here - need to take care of binary mediator and binary treatment 7.1.2020##
+  ##Maybe pass the top few rows of the dataframe to the function.
+
+  model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, c = c, ymodel = ymodel, mmodel = mmodel, incint = incint, inc_mmint = inc_mmint, conf.level, data_head = head(data, 1), treat_lv = treat_lv, control_lv = control_lv)
   mediation_res_html <- gen_med_table_html(med_res = results$combined, med = med, conf.level = conf.level, digits = digits)
 
   tmp_text <- paste0("<h4><u>Descriptive statistics</u></h4> The table below shows the descriptive statistics of all analyses variables. The overall sample size is ",nrow(data),". ")
