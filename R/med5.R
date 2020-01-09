@@ -21,7 +21,7 @@
 mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, out_scale = "difference", complete_analysis = FALSE, digits = 2) {
 
   #9.1.2020 In the middle of validating input
-  validate_input(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, sim = sim, conf.level = conf.level, out_scale = out_scale, complete_analysis = complete_analysis, digits = digits)
+  valid_input <- validate_input(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = data, sim = sim, conf.level = conf.level, out_scale = out_scale, complete_analysis = complete_analysis, digits = digits)
 
   y_modelformula <- build_ymodel_formula(y, med = med, treat = treat, ymodel = ymodel, data = data, c = c, mod = mod, incint = incint, inc_mmint = inc_mmint)
   fo_vars <- base::all.vars(y_modelformula)
