@@ -43,4 +43,7 @@ validate_input <- function(y, med, treat, mod, c, ymodel, mmodel, treat_lv, cont
   if (sum(stringr::str_detect(ymodel, c("regression","poisson regression","logistic regression"))) != 1) {
     stop("Only regression, poisson regerssion and logistic are supported for the outcome variable.")
   }
+  if (ymodel == "logistic regression") {
+    expr = parse(text = paste0())
+  }
 }
