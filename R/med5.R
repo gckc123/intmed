@@ -676,7 +676,7 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
 
     prop1 = sim_res$indirect1/sim_res$total
 
-    output = list(indirect1 = sim_res$indirect1, direct = sim_res$direct, total = sim_res$total, prop1 = prop1, ymodel = yres, ymodel_te = yres_te, m1_model = m1res)
+    output = list(indirect1 = sim_res$indirect1, direct = sim_res$direct, total = sim_res$total, prop1 = prop1, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, total2 = sim_res$total2)
 
     return(output)
   }else if (length(med) == 2) {
@@ -684,7 +684,7 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
     prop1 = sim_res$indirect1/sim_res$total
     prop2 = sim_res$indirect2/sim_res$total
 
-    output = list(direct = sim_res$direct, indirect1 = sim_res$indirect1, indirect2 = sim_res$indirect2, dependence = sim_res$dependence, interaction = sim_res$interaction, total = sim_res$total, prop1 = prop1, prop2 = prop2, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, m2_model_cond = m2res_cond, m2_model = m2res_marg)
+    output = list(direct = sim_res$direct, indirect1 = sim_res$indirect1, indirect2 = sim_res$indirect2, dependence = sim_res$dependence, interaction = sim_res$interaction, total = sim_res$total, prop1 = prop1, prop2 = prop2, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, m2_model_cond = m2res_cond, m2_model = m2res_marg, total2 = sim_res$total2)
     return(output)
   }else if (length(med) ==  3) {
 
@@ -692,7 +692,7 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
     prop2 = sim_res$indirect2/sim_res$total
     prop3 = sim_res$indirect3/sim_res$total
 
-    output = list(direct = sim_res$direct, indirect1 = sim_res$indirect1, indirect2 = sim_res$indirect2, indirect3 = sim_res$indirect3, total = sim_res$total, prop1 = prop1, prop2 = prop2, prop3 = prop3, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, m2_model_cond = m2res_cond, m2_model = m2res_marg, m3_model = m3res_marg, m3_model_cond_m1 = m3res_cond_m1, m3_model_cond_m2 = m3res_cond_m2, m3_model_cond_m1m2 = m3res_cond_m1m2)
+    output = list(direct = sim_res$direct, indirect1 = sim_res$indirect1, indirect2 = sim_res$indirect2, indirect3 = sim_res$indirect3, total = sim_res$total, prop1 = prop1, prop2 = prop2, prop3 = prop3, ymodel = yres, ymodel_te = yres_te, m1_model = m1res, m2_model_cond = m2res_cond, m2_model = m2res_marg, m3_model = m3res_marg, m3_model_cond_m1 = m3res_cond_m1, m3_model_cond_m2 = m3res_cond_m2, m3_model_cond_m1m2 = m3res_cond_m1m2, total2 = sim_res$total2)
     return(output)
   }
 }
@@ -705,7 +705,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       est2 = (mean(ys$y10 - ys$y00))
       est3 = (mean(ys$y11 - ys$y00))
       est5 = (mean(ys$y1 - ys$y0))
-      output = c(indirect1 = est1, direct = est2, total = est3)
+      output = c(indirect1 = est1, direct = est2, total = est3, total2 = est5)
       return(output)
     }else if (model == "logistic regression") {
       ys$y00 = (1-1/(1+exp(ys$y00)))
@@ -731,7 +731,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
         #est4 = (mean(ys$y11)/mean(1-ys$y11))/(mean(ys$y00)/mean(1-ys$y00))
         est5 = (mean(ys$y1)/mean(1-ys$y1))/(mean(ys$y0)/mean(1-ys$y0))
       }
-      output = c(indirect1 = est1, direct = est2, total = est3)
+      output = c(indirect1 = est1, direct = est2, total = est3, total2 = est5)
       return(output)
     }else if (model == "poisson regression") {
       ys$y00 = exp(ys$y00)
@@ -747,7 +747,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
 
       est5 = mean(ys$y1 - ys$y0)
 
-      output = c(indirect1 = est1, direct = est2, total = est3)
+      output = c(indirect1 = est1, direct = est2, total = est3, total2 = est5)
       return(output)
     }
   }else if (length(ys) == 9) {
@@ -769,7 +769,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       est6 = mean(ys$y_111_cond - ys$y_000_cond)
       est7 = mean(ys$y1 - ys$y0)
 
-      output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6)
+      output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6, total2 = est7)
       return(output)
     }else if (model == "logistic regression") {
       #calculate the probabilities here
@@ -797,7 +797,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
         est6 = mean(ys$y_111_cond - ys$y_000_cond)
         est7 = mean(ys$y1 - ys$y0)
 
-        output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6)
+        output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6, total2 = est7)
         return(output)
 
       }else if (out_scale == "ratio") {
@@ -810,7 +810,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
         est6 = (mean(ys$y_111_cond)/mean(1-ys$y_111_cond)) / (mean(ys$y_000_cond)/mean(1-ys$y_000_cond))
         est7 = (mean(ys$y1)/mean(1-ys$y1))/(mean(ys$y0)/mean(1 - ys$y0))
 
-        output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6)
+        output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6, total2 = est7)
         return(output)
 
       }
@@ -838,7 +838,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       est6 = mean(ys$y_111_cond - ys$y_000_cond)
       est7 = mean(ys$y1 - ys$y0)
 
-      output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6)
+      output = c(direct = est1, indirect1 = est2, indirect2 = est3, dependence = est4, interaction = est5, total = est6, total2 = est7)
       return(output)
     }
     #for 3 mediators, the order is y_0000_cond_m1m2m3, y_1000_cond_m1m2m3, y_1100_cond_m2m3, y_1000_cond_m2m3, y_1010_cond_m1m3, y_1000_cond_m1m3, y_1001_cond_m1m2, y_1000_cond_m1m2, y_1111_cond_m1m2m3, y0, y1
@@ -851,7 +851,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       est5 = mean(ys$y_1111_cond_m1m2m3 - ys$y_0000_cond_m1m2m3)
       est6 = mean(ys$y1 - ys$y0)
 
-      output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5)
+      output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5, total2 = est6)
       return(output)
 
     }else if (model == "logistic regression") {
@@ -876,7 +876,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
         est5 = mean(ys$y_1111_cond_m1m2m3 - ys$y_0000_cond_m1m2m3)
         est6 = mean(ys$y1 - ys$y0)
 
-        output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5)
+        output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5, total2 = est6)
         return(output)
 
       }else if (out_scale == "ratio") {
@@ -902,7 +902,7 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
       est5 = mean(ys$y_1111_cond_m1m2m3 - ys$y_0000_cond_m1m2m3)
       est6 = mean(ys$y1 - ys$y0)
 
-      output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5)
+      output = c(direct = est1, indirect1= est2, indirect2 = est3, indirect3 = est4, total = est5, total2 = est6)
       return(output)
     }
   }
