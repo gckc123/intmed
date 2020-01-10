@@ -255,3 +255,5 @@ yres = glm(heavyalcohol ~ peer + supervision + alcohol, family = "poisson", data
 m1res = glm(peer ~ supervision + alcohol, family = "poisson", data = example_data)
 mediate_package_res <- mediate(m1res, yres, sims = 1000, treat = "supervision", mediator = "peer")
 summary(mediate_package_res)
+
+#test 16 - simulating binary variables

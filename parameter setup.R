@@ -326,7 +326,7 @@ summary(mediate_package_res)
 ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer"), treat = "alcohol2", c = "conflict", ymodel = "logistic regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 1000, out_scale = "ratio", digits = 3)
 
 #start testing 8.1.2020
-ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer2_factor","supervision"), treat = "alcohol2", c = "conflict", ymodel = "logistic regression", mmodel = c("logistic regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 1000, out_scale = "difference", digits = 3)
+ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer2_factor","supervision"), treat = "alcohol2", c = "conflict", ymodel = "logistic regression", mmodel = c("logistic regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol1, sim = 1000, out_scale = "difference", digits = 3)
 
 ff <- intmed::mediate(y = "heavyalcohol", med = c("peer2","supervision"), treat = "alcohol2", c = "conflict", ymodel = "regression", mmodel = c("regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol, sim = 1000, out_scale = "difference", digits = 3)
 ff <- intmed::mediate(y = "heavyalcohol", med = c("peer2","supervision"), treat = "alcohol2", c = "conflict", ymodel = "regression", mmodel = c("regression","regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = alcohol, sim = 1000, out_scale = "difference", digits = 3)
@@ -351,7 +351,58 @@ ff <- intmed::mediate(y = "heavyalcohol", med = c("peer2","supervision"), treat 
 
 ff <- intmed::mediate(y = "heavyalcohol", med = c("peer2","supervision"), treat = "alcohol2", c = c("conflict","depress","cat1"), ymodel = "regression", mmodel = c("regression","regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = alcohol, sim = 1000, out_scale = "difference", digits = 2)
 
+ff <- intmed::mediate(y = "heavyalcohol", med = c("peer2","supervision"), treat = "alcohol2", c = c("conflict","depress"), ymodel = "poisson regression", mmodel = c("regression","regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = TRUE, data = alcohol, sim = 1000, out_scale = "difference", digits = 5)
+
 #may need to fix this - when the treatment variables have multiple categories. 8.1.2020
 ff <- intmed::mediate(y = "heavyalcohol", med = c("peer2","supervision"), treat = "cat1", c = c("conflict","depress"), ymodel = "regression", mmodel = c("regression","regression"), treat_lv = "HAHA", control_lv = "LALA", incint = TRUE, inc_mmint = FALSE, data = alcohol, sim = 1000, out_scale = "difference", digits = 2)
 #may need to implement a check input function 8.1.2020
 ff <- intmed::mediate(y = "heavyalcohol", med = c("peer2","supervision"), treat = "alcohol2", c = "conflict", ymodel = "regression", mmodel = c("regression","regression"), treat_lv = "haha", control_lv = 0, incint = NULL, inc_mmint = TRUE, data = alcohol, sim = 1000, out_scale = "difference", digits = 3)
+
+ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer2","heavyalcohol"), treat = "alcohol2", c = "conflict", ymodel = "regression", mmodel = c("regression","regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data = alcohol, sim = 100, out_scale = "difference", digits = 3)
+
+#comparing mediation package and intmed 10.1.2020
+#results are consistent
+alcohol1 <- tibble::add_column(alcohol, missing = rowSums(sapply(alcohol, is.na)))
+alcohol1 <- alcohol1[alcohol1$missing == 0, 1:length(alcohol1)-1]
+
+#Binary outcome
+ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer2_factor"), treat = "supervision", c = c("conflict","depress"), ymodel = "logistic regression", mmodel = c("logistic regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol1, sim = 50000, out_scale = "difference", digits = 5)
+
+yres <- glm(heavyalcohol2 ~ peer2+supervision+conflict+depress, family = "binomial", data = alcohol1)
+m1res <- glm(peer2 ~ supervision+conflict+depress, family = "binomial", data = alcohol1)
+mediate_package_res <- mediation::mediate(m1res, yres, sims = 50000, treat = "supervision", mediator = "peer2", data = alcohol1)
+summary(mediate_package_res)
+
+#Count
+ff <- intmed::mediate(y = "heavyalcohol", med = c("peer2_factor"), treat = "supervision", c = c("conflict","depress"), ymodel = "poisson regression", mmodel = c("logistic regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol1, sim = 50000, out_scale = "difference", digits = 5)
+
+yres <- glm(heavyalcohol ~ peer2+supervision+conflict+depress, family = "poisson", data = alcohol1)
+m1res <- glm(peer2 ~ supervision+conflict+depress, family = "binomial", data = alcohol1)
+mediate_package_res <- mediation::mediate(m1res, yres, sims = 50000, treat = "supervision", mediator = "peer2", data = alcohol1)
+summary(mediate_package_res)
+
+#evaluating total effect from Y11-Y00 vs Y1-Y0
+yres <- glm(heavyalcohol2 ~ peer2+supervision_2cat, family = "binomial", data = alcohol1)
+m1res <- glm(peer2 ~ supervision_2cat, family = "binomial", data = alcohol1)
+mediate_package_res <- mediation::mediate(m1res, yres, sims = 50000, treat = "supervision_2cat", mediator = "peer2", data = alcohol1)
+summary(mediate_package_res)
+yres_te <- glm(heavyalcohol2 ~ supervision_2cat, family = "binomial", data = alcohol1)
+newdata = data.frame(supervision_2cat = c("0","1"))
+predict(yres_te, newdata, type = "response")
+newdata = data.frame(supervision_2cat = "1")
+
+ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer2_factor"), treat = "supervision", c = c("conflict","depress"), ymodel = "logistic regression", mmodel = c("logistic regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol1, sim = 10000, out_scale = "difference", digits = 5)
+
+yres <- glm(heavyalcohol2 ~ peer2+supervision+conflict+depress, family = "binomial", data = alcohol1)
+m1res <- glm(peer2 ~ supervision+conflict+depress, family = "binomial", data = alcohol1)
+mediate_package_res <- mediation::mediate(m1res, yres, sims = 50000, treat = "supervision", mediator = "peer2", data = alcohol1)
+summary(mediate_package_res)
+yres_te <- glm(heavyalcohol2 ~ supervision, family = "binomial", data = alcohol1)
+newdata = data.frame(supervision = c(0,1))
+predict(yres_te, newdata, type = "response")
+
+#When do Y11-Y00 != Y1 - Y0??? Need to find out these conditions 10.1.2020
+
+#need to check the below code - Just need to implement validation check for mediators 10.1.2020
+ff <- intmed::mediate(y = "heavyalcohol2", med = "heavyalcohol5", treat = "supervision", c = "conflict", ymodel = "logistic regression", mmodel = c("poisson regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol1, sim = 1000, out_scale = "difference", digits = 3)
+ff <- intmed::mediate(y = "heavyalcohol2", med = c("peer2"), treat = "supervision", c = c("conflict","depress"), ymodel = "logistic regression", mmodel = c("logistic regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = alcohol1, sim = 1000, out_scale = "difference", digits = 3)
