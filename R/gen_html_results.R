@@ -203,7 +203,6 @@ gen_med_reg_table <- function(y_res, m_res, med, ymodel, mmodel, conf.level = 0.
 
 }
 
-
 extract_reg_table <- function(res, model, conf.level = 0.95, digits = 2) {
   half_alpha = (1-conf.level)/2
   if (class(res)[[1]] == "mipo") {
