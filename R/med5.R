@@ -174,6 +174,7 @@ mediate <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_
   cat(results$res_html)
   sink()
 
+  shell.exec("res.html")
   return(results)
 
 }

@@ -141,6 +141,14 @@ validate_input <- function(y, med, treat, mod, c, ymodel, mmodel, treat_lv, cont
         }
       }
     }
+
+    if (mmodel[i] == "regression") {
+      expr = parse(text = paste0("tmp <- is.numeric(data$",med[i],")"))
+      eval(expr)
+      if (!tmp) {
+        stop("Regression is specified for mediator ",i,". This mediator must be a numeric variable. Please check the variable.")
+      }
+    }
   }
 
 }

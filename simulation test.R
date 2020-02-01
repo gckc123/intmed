@@ -256,4 +256,35 @@ m1res = glm(peer ~ supervision + alcohol, family = "poisson", data = example_dat
 mediate_package_res <- mediate(m1res, yres, sims = 1000, treat = "supervision", mediator = "peer")
 summary(mediate_package_res)
 
-#test 16 - simulating binary variables
+#test 16 - this is used in the paper
+
+n = 1000
+x = runif(n)
+x = ifelse(x < 0.5, 0, 1)
+
+m = 0.1 + 0.2*x + rnorm(n, 0, 1)
+y = 0.3 + 0.4*x + 0.5*m + +0.6*x*m + rnorm(n, 0, 1)
+summary(lm(y ~ x * m))
+
+
+df <- data.frame(x,m,y)
+sim_data <- df
+save(sim_data, file = "sim_data.rda")
+write.csv(sim_data, file = "sim_data.csv")
+
+ptm <-proc.time()
+ff <- intmed::mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = sim_data, sim = 10000, out_scale = "difference", digits = 3)
+proc.time() - ptm
+
+ptm <- proc.time()
+yres = ff$individual$ymodel
+m1res = ff$individual$m1_model
+ff3 <- mediation::mediate(m1res, yres, sims = 10000, treat = "x", mediator = "m")
+summary(ff3)
+proc.time() - ptm
+
+ff <- intmed::mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = df, sim = 10000, out_scale = "difference", digits = 3)
+yres = ff$individual$ymodel
+m1res = ff$individual$m1_model
+ff3 <- mediation::mediate(m1res, yres, sims = 10000, treat = "x", mediator = "m")
+summary(ff3)
