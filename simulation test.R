@@ -149,7 +149,7 @@ m3 = 0.4*x + rnorm(n, 0, 0.5)
 y = 0.8*x + 0.5*m1 + 0.6*m2 + 0.7*m3 + rnorm(n, 0, 0.5)
 
 simdata <- data.frame(x,m1,m2,m3,y)
-ff <- medi(y = "y", med = c("m1","m2","m3"), treat = "x", c = NULL, ymodel = "regression", mmodel = c("regression", "regression", "regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = simdata, sim = 5000, out_scale = "difference")
+ff <- mediate(y = "y", med = c("m1","m2","m3"), treat = "x", c = NULL, ymodel = "regression", mmodel = c("regression", "regression", "regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = simdata, sim = 5000)
 
 #test 8
 #test 3 mediators
@@ -288,3 +288,6 @@ yres = ff$individual$ymodel
 m1res = ff$individual$m1_model
 ff3 <- mediation::mediate(m1res, yres, sims = 10000, treat = "x", mediator = "m")
 summary(ff3)
+
+
+med_res2 <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = sim_data, sim = 10000, digits = 3)

@@ -3,7 +3,7 @@
 \docType{package}
 \name{intmed}
 \alias{intmed}
-\title{intmed: A package for estimating the interventional effect for mediation analysis.}
+\title{intmed: A package for mediation analysis using the interventional effect approach}
 \description{
-intmed: A package for estimating the interventional effect for mediation analysis.
+intmed: A package for mediation analysis using the interventional effect approach
 }

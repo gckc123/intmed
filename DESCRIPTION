@@ -2,21 +2,24 @@ Package: intmed
 Type: Package
 Title: An implementation of interventional effects for mediation analysis
 Version: 0.1.0
-Author: Gary Chan
-Maintainer: Gary Chan <c.chan4@uq.edu.au>
+Authors@R: person("Gary", "Chan", email = "c.chan4@uq.edu.au",
+  role = c("aut", "cre"))
 Description: Implementing the interventional effects for mediation analysis for up to 3 mediators.
     The methods used are based on VanderWeele, Vansteelandt and Robins (2014), 
-    Vansteelandt and Daniel (2017) and Chan (2020).
+    Vansteelandt and Daniel (2017) and Chan and Leung (2020).
+    Linear regression, logistic regression and Poisson regression are used for continuous, binary 
+    and count mediator/outcome variables respectively.
 License: MIT
 Encoding: UTF-8
 LazyData: true
-Depends:
+Imports:
     stringr,
     tidyverse,
     MASS,
-    parallel,
     mice,
-    doParallel,
-    rmarkdown,
     EValue
+Depends:
+    doParallel,
 RoxygenNote: 7.0.1
+Suggests: 
+    testthat
