@@ -1,7 +1,5 @@
 #' Performing mediation analysis based on the interventional effect
 #'
-#'
-#'
 #' @param y The outcome variable.
 #' @param med A vector of the mediators.
 #' @param treat The exposure variable.
@@ -48,11 +46,11 @@
 #' across all imputed datasets. If there is no missing data, it contains lists of draws for the direct and indirect effect and relevant estimates from each of the simulation. }
 #' \item{direct}{Element of the \code{combined} list. A vector of estimates of direct effect from all simulations in all imputed datasets. If multiple imputation is not performed,
 #' it is a list of estimates of direct effect from all simulations.}
-#' \item{indirect1, indirect2, indirect3}{Element of the \code{combined} list. A vector of draws of indirect effect through mediator 1, 2 and 3 from all simulations in all imputed datasets.
+#' \item{indirect}{Element of the \code{combined} list. A list containing vectors of draws of indirect effect through mediator 1, 2 and 3 from all simulations in all imputed datasets.
 #' If multiple imputation is not performed, it is a list of estimates of direct effect from all simulations.}
 #' \item{total}{Element of the \code{combined} list. A vector of draws of total effect of exposure from all simulations in all imputed datasets.
 #' If multiple imputation is not performed, it is a list of estimates of direct effect from all simulations.}
-#' \item{prop1, prop2, prop3}{Element of the \code{combined} list. Vectors of draws of proportion of effects mediated through mediator 1, 2 and 3 from all simulations in all imputed datasets.
+#' \item{prop}{Element of the \code{combined} list. A list containing vectors of draws of proportion of effects mediated through mediator 1, 2 and 3 from all simulations in all imputed datasets.
 #' If multiple imputation is not performed, it is a list of estimates of direct effect from all simulations.}
 #' \item{interaction}{Element of the \code{combined} list. Only available when there are two mediators. A vector of draws of effect mediated through the interaction between mediators from all simulations in all imputed datasets.
 #' If multiple imputation is not performed, it is a list of estimates of direct effect from all simulations.}
@@ -199,7 +197,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     }else if (length(med) == 2) {
       results$combined = list(indirect = list(results$individual$indirect1, results$individual$indirect2), direct = results$individual$direct, total = results$individual$total, prop = list(results$individual$prop1, results$individual$prop2), interaction = results$individual$interaction, dependence = results$individual$dependence)
     }else if (length(med) == 3) {
-      results$combined = list(indirect = list(results$individual$indirect1, results$individual$indirect2, results$individual$indirect2), direct = results$individual$direct, total = results$individual$total, prop = list(results$individual$prop1, results$individual$prop2, results$individual$prop3), interaction = NULL, dependence = NULL)
+      results$combined = list(indirect = list(results$individual$indirect1, results$individual$indirect2, results$individual$indirect3), direct = results$individual$direct, total = results$individual$total, prop = list(results$individual$prop1, results$individual$prop2, results$individual$prop3), interaction = NULL, dependence = NULL)
     }
     results$model_summary <- gen_med_reg_table(y_res = results$individual$ymodel, m_res = m_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
   }

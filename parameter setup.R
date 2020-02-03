@@ -436,4 +436,4 @@ ff <- intmed::mediate(y = "binge", med = c("peer_alc","alcohol_exp"), treat = "m
 
 med_res <- mediate(y = "binge", med = c("peer_alc","alcohol_exp"), treat = "monitoring", c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression","logistic regression"), treat_lv = 1, control_lv = 0, data = alcohol, sim = 1000, digits = 3)
 
-med_res <- intmed::mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int", c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression","logistic regression"), treat_lv = 1, control_lv = 0, data = substance, sim = 1000, digits = 3)
+med_res <- intmed::mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int", c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression","logistic regression"), treat_lv = 1, control_lv = 0, data = substance, sim = 100000, digits = 5)

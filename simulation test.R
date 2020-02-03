@@ -197,7 +197,7 @@ m3 = 0.4*x + m1 + 1.1*m2 + rnorm(n, 0, 0.1) + 0.3*c
 y = 0.8*x + 0.5*m1 + 0.6*m2 + 0.7*m3 + rnorm(n, 0, 0.1) + 2 + 0.4*c
 
 simdata <- data.frame(x,m1,m2,m3,y,c)
-ff <- medi(y = "y", med = c("m3","m1","m2"), treat = "x", c = "c", ymodel = "regression", mmodel = c("regression", "regression", "regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = simdata, sim = 5000, out_scale = "difference")
+ff <- mediate(y = "y", med = c("m3","m1","m2"), treat = "x", c = "c", ymodel = "regression", mmodel = c("regression", "regression", "regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = simdata, sim = 5000, digits = 5)
 
 summary(ff$ymodel)
 
@@ -290,4 +290,4 @@ ff3 <- mediation::mediate(m1res, yres, sims = 10000, treat = "x", mediator = "m"
 summary(ff3)
 
 
-med_res2 <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = sim_data, sim = 10000, digits = 3)
+med_res2 <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = sim_data, sim = 200000, digits = 6)

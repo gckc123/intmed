@@ -113,7 +113,7 @@ gen_med_reg_html <- function(res_df, y, med, treat, c, ymodel, mmodel, incint = 
 }
 
 gen_med_table_html <- function(med_res, med, conf.level = 0.95, digits = 2) {
-  res_des = "<br/><h4><u>Mediation analysis</u></h4>Mediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020). <br/> Results from the mediation analysis indicated that <ul>"
+  res_des = paste0("<br/><h4><u>Mediation analysis</u></h4>Mediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020) with ",length(med_res$direct), " simulations. <br/> Results from the mediation analysis indicated that <ul>")
   alpha_level = 1-conf.level
   html_output = "<br/><b>Table. Mediation analysis results.</b><br/>"
   html_output = c(html_output, "<table style = \"text-align: left;border-bottom: 1px solid black; border-top: 1px solid black;\" cellspacing=\"0\" cellpadding = \"2\">")
