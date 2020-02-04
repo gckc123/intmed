@@ -1,5 +1,6 @@
 #' Performing mediation analysis based on the interventional effect
-#'
+#' @import doParallel
+#' @import foreach
 #' @param y The outcome variable.
 #' @param med A vector of the mediators.
 #' @param treat The exposure variable.
@@ -7,20 +8,25 @@
 #' @param ymodel A character string specifying the outcome model. Current options are "regression" (for continuous variable), "logistic regression" (for binary variable), and "poisson regression" (for count variable)
 #' @param mmodel A vector of character string specifying the mediator models. Current options are "regression" (for continuous variable), "logistic regression" (for binary variable), and "poisson regression" (for count variable)
 #' @param treat_lv Value of the treatment variable used as the treatment condition. Default is 1.
-#' @param contron_lv Value of the treatment variable used as the control condition. Default is 0.
+#' @param control_lv Value of the treatment variable used as the control condition. Default is 0.
 #' @param incint A vector of boolean specifying if the exposure-mediator interactions are included into the outcome model. Default is NULL.
 #' @param inc_mmint A boolean value specifying if the mediator-mediator interactions are included. Default is FALSE.
 #' @param data A data frame containing all the analysis variables.
 #' @param sim A numerical value specifying the number of simulation. Default is 1000.
 #' @param conf.level A numerical value specifying the confidence interval the the estimates. Default is 0.95
 #' @param complete_analysis Multiple imputation will be used to fill in missing value. Setting this flag to FALSE will force the analysis to be conducted on complete data.
+#' @param digits Number of digits shown in the HTML report.
 #' @examples
-#' med_res <- mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int", c = c("conflict","gender"),
-#' ymodel = "logistic regression", mmodel = c("logistic regression","logistic regression"), treat_lv = 1, control_lv = 0,
-#' data = substance, sim = 1000, digits = 3)
 #'
-#' med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression", mmodel = c("regression"), treat_lv = 1,
-#' control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = sim_data, sim = 10000, digits = 3)
+#' med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression",
+#' mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE,
+#' conf.level = 0.9, data = sim_data, sim = 20, digits = 3)
+#'
+#' med_res <- mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int",
+#' c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression",
+#' "logistic regression"), treat_lv = 1, control_lv = 0, conf.level = 0.9,
+#' data = substance, sim = 20, digits = 3)
+#'
 #' @return \code{mediate} generates a report in HTML format based on results from the mediation analysis. This report is saved in the working directory.
 #' The followings will returned by \code{mediate}
 #' \item{individual}{If there is no missing data or complete data analysis is performed, \code{individual} is a list containing the models for the outcome and mediators,
@@ -187,7 +193,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     results$model_summary <- gen_med_reg_table(y_res = results$y_pooled_res, m_res = results$m_pooled_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
   }else {
     results$individual = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = data, sim = sim, conf.level = conf.level, out_scale = out_scale)
-    for (i  in 1:length(med)) {
+    for (i in 1:length(med)) {
       expr = parse(text = paste0("m_res[[i]] = results$individual$m",i,"_model"))
       eval(expr)
     }
@@ -202,7 +208,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     results$model_summary <- gen_med_reg_table(y_res = results$individual$ymodel, m_res = m_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
   }
 
-  model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, c = c, ymodel = ymodel, mmodel = mmodel, incint = incint, inc_mmint = inc_mmint, conf.level, data_head = head(data, 1), treat_lv = treat_lv, control_lv = control_lv)
+  model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, c = c, ymodel = ymodel, mmodel = mmodel, incint = incint, inc_mmint = inc_mmint, conf.level, data_head = utils::head(data, 1), treat_lv = treat_lv, control_lv = control_lv)
   mediation_res_html <- gen_med_table_html(med_res = results$combined, med = med, conf.level = conf.level, digits = digits)
 
   tmp_text <- paste0("<h4><u>Descriptive statistics</u></h4> The table below shows the descriptive statistics of all analyses variables. The overall sample size is ",nrow(data),". ")
@@ -224,8 +230,8 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
   sink("res.html")
   cat(results$res_html)
   sink()
-
   shell.exec("res.html")
+
   return(results)
 
 }
@@ -233,9 +239,18 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
 medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data, sim = 1000, conf.level = 0.95, out_scale = "difference") {
   data <- tibble::add_column(data, missing = rowSums(sapply(data, is.na)))
   data <- data[data$missing == 0, 1:length(data)-1]
+  i = NULL
+  chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+  if (nzchar(chk) && chk == "TRUE") {
+    # use 2 cores in CRAN/Travis/AppVeyor
+    no_cores <- 2L
+  } else {
+    # use all cores in devtools::test()
+    no_cores = parallel::detectCores() - 1
+  }
 
-  no_cores = parallel::detectCores() - 1
-  cl <- parallel::makeCluster(no_cores, outfile=paste0('./info_parallel.log'))
+  #cl <- parallel::makeCluster(no_cores, outfile=paste0('./info_parallel.log'))
+  cl <- parallel::makeCluster(no_cores)
 
   doParallel::registerDoParallel(cl)
   m2_modelformula = NULL
@@ -261,6 +276,27 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
 
   dependence = rep(0, sim)
   interaction = rep(0, sim)
+
+  y00 <- NULL
+  y01 <- NULL
+  y10 <- NULL
+  y11 <- NULL
+  y_000_cond <- NULL
+  y_100_cond <- NULL
+  y_110_marg <- NULL
+  y_100_marg <- NULL
+  y_101_marg <- NULL
+  y_111_cond <- NULL
+  y_111_marg <- NULL
+  y_0000_cond_m1m2m3 <- NULL
+  y_1000_cond_m1m2m3 <- NULL
+  y_1100_cond_m2m3 <- NULL
+  y_1000_cond_m2m3 <- NULL
+  y_1010_cond_m1m3 <- NULL
+  y_1000_cond_m1m3 <- NULL
+  y_1001_cond_m1m2 <- NULL
+  y_1000_cond_m1m2 <- NULL
+  y_1111_cond_m1m2m3 <- NULL
 
   m1_modelformula <- build_mmodel_formula(med = med, medposition = 1, treat = treat, mmodel = mmodel, data = data, cond = NULL, c, mod = mod)
   m1res <- run_model(m1_modelformula, mmodel[1], data)
@@ -431,9 +467,9 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
 
   ####################################################################################################################
 
-  m1coeff <- MASS::mvrnorm(n = sim, m1res$coefficients, vcov(m1res))
-  ycoeff <- MASS::mvrnorm(n = sim, yres$coefficients, vcov(yres))
-  y_tecoeff <- MASS::mvrnorm(n = sim, yres_te$coefficients, vcov(yres_te))
+  m1coeff <- MASS::mvrnorm(n = sim, m1res$coefficients, stats::vcov(m1res))
+  ycoeff <- MASS::mvrnorm(n = sim, yres$coefficients, stats::vcov(yres))
+  y_tecoeff <- MASS::mvrnorm(n = sim, yres_te$coefficients, stats::vcov(yres_te))
 
   if (length(med) == 1) {
     m1_fixed_part_value = NULL
@@ -489,8 +525,8 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
     m2marg_fixed_part_value = NULL
     y_fixed_part_value = NULL
     #NEED TO HAVE BETTER NAMING OF THE VARIABLES - m2coeff_cond vs m2cond_coeff??!
-    m2coeff_marg = MASS::mvrnorm(n = sim, m2res_marg$coefficients, vcov(m2res_marg))
-    m2coeff_cond = MASS::mvrnorm(n = sim, m2res_cond$coefficients, vcov(m2res_cond))
+    m2coeff_marg = MASS::mvrnorm(n = sim, m2res_marg$coefficients, stats::vcov(m2res_marg))
+    m2coeff_cond = MASS::mvrnorm(n = sim, m2res_cond$coefficients, stats::vcov(m2res_cond))
 
     sim_res <- foreach::foreach(i=1:sim, .combine = rbind, .inorder = TRUE, .export = c("random_draw","generate_estimates")) %dopar% {
       current_m1coeff = m1coeff[i,]
@@ -574,13 +610,13 @@ medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv 
       generate_estimates(data.frame(y_000_cond, y_100_cond, y_110_marg, y_100_marg, y_101_marg, y_111_cond, y_111_marg, y0, y1), ymodel, out_scale = out_scale)
     }
   }else if (length(med) == 3) {
-    m2coeff_marg = MASS::mvrnorm(n = sim, m2res_marg$coefficients, vcov(m2res_marg))
-    m2coeff_cond = MASS::mvrnorm(n = sim, m2res_cond$coefficients, vcov(m2res_cond))
+    m2coeff_marg = MASS::mvrnorm(n = sim, m2res_marg$coefficients, stats::vcov(m2res_marg))
+    m2coeff_cond = MASS::mvrnorm(n = sim, m2res_cond$coefficients, stats::vcov(m2res_cond))
 
-    m3coeff_marg = MASS::mvrnorm(n = sim, m3res_marg$coefficients, vcov(m3res_marg))
-    m3coeff_cond_m1 = MASS::mvrnorm(n = sim, m3res_cond_m1$coefficients, vcov(m3res_cond_m1))
-    m3coeff_cond_m2 = MASS::mvrnorm(n = sim, m3res_cond_m2$coefficients, vcov(m3res_cond_m2))
-    m3coeff_cond_m1m2 = MASS::mvrnorm(n = sim, m3res_cond_m1m2$coefficients, vcov(m3res_cond_m1m2))
+    m3coeff_marg = MASS::mvrnorm(n = sim, m3res_marg$coefficients, stats::vcov(m3res_marg))
+    m3coeff_cond_m1 = MASS::mvrnorm(n = sim, m3res_cond_m1$coefficients, stats::vcov(m3res_cond_m1))
+    m3coeff_cond_m2 = MASS::mvrnorm(n = sim, m3res_cond_m2$coefficients, stats::vcov(m3res_cond_m2))
+    m3coeff_cond_m1m2 = MASS::mvrnorm(n = sim, m3res_cond_m1m2$coefficients, stats::vcov(m3res_cond_m1m2))
 
     sim_res <- foreach::foreach(i=1:sim, .combine = rbind, .inorder = TRUE, .export = c("random_draw","generate_estimates")) %dopar% {
       current_m1coeff = m1coeff[i,]
@@ -958,28 +994,29 @@ generate_estimates <- function(ys, model, out_scale = "difference") {
 random_draw <- function(data,modelres,model) {
   output <- list()
   if (model == "regression") {
-    resid_sd <- sd(modelres$residuals)
-    err <- rnorm(length(data[[1]]), mean = 0, sd = resid_sd)
+    resid_sd <- stats::sd(modelres$residuals)
+    err <- stats::rnorm(length(data[[1]]), mean = 0, sd = resid_sd)
     for (i in 1:length(data)) {
       output[[i]] <- data[[i]] + err
     }
     return(output)
 
   }else if (model == "logistic regression") {
+    tmp <- NULL
     expr = parse(text = paste0("tmp = levels(modelres$data$",all.vars(modelres$formula)[1],")"))
     eval(expr)
 
     for (i in 1:length(data)) {
-      sim_data <- runif(length(data[[i]])) > 1/(1+exp(data[[i]]))
+      sim_data <- stats::runif(length(data[[i]])) > 1/(1+exp(data[[i]]))
       sim_data = ifelse(sim_data == 0, tmp[1], tmp[2])
       sim_data = as.factor(sim_data)
-      sim_data = relevel(sim_data, ref=tmp[1])
+      sim_data = stats::relevel(sim_data, ref=tmp[1])
       output[[i]] = sim_data
     }
     return(output)
   }else if (model == "poisson regression") {
     for (i in 1:length(data)) {
-      sim_data <- rpois(length(data[[i]]), exp(data[[i]]))
+      sim_data <- stats::rpois(length(data[[i]]), exp(data[[i]]))
       output[[i]] = sim_data
     }
     return(output)
@@ -1118,11 +1155,11 @@ random_draw_formula_terms <- function(model, data_name, coeff_name) {
 
 run_model <- function(fo, model, data) {
   if (model == "regression") {
-    res = lm(fo,data = data)
+    res = stats::lm(fo,data = data)
   }else if (model == "logistic regression") {
-    res = glm(fo, data = data, family = "binomial")
+    res = stats::glm(fo, data = data, family = "binomial")
   }else if (model == "poisson regression") {
-    res = glm(fo, data = data, family = "poisson")
+    res = stats::glm(fo, data = data, family = "poisson")
   }
   return(res)
 }
@@ -1201,7 +1238,7 @@ build_ymodel_formula <- function(y, med, treat, ymodel, data, c = NULL, mod = NU
     }
   }
   fo <- paste0(y,"~", xvar)
-  fo <- as.formula(fo)
+  fo <- stats::as.formula(fo)
   return(fo)
 }
 
@@ -1222,7 +1259,7 @@ build_mmodel_formula <- function(med, medposition, treat, mmodel, data, cond = N
       print("Number of moderators and mediators are not the same.")
       return(NULL)
     }
-    if (!str_detect(xvar,target_str)) {
+    if (!stringr::str_detect(xvar,target_str)) {
       target_str = treat
       xvar = stringr::str_replace(xvar,target_str,replacement_str)
     }else {
@@ -1238,7 +1275,7 @@ build_mmodel_formula <- function(med, medposition, treat, mmodel, data, cond = N
     }
   }
   fo <- paste0(med[medposition],"~", xvar)
-  fo <- as.formula((fo))
+  fo <- stats::as.formula((fo))
 
   return(fo)
 }

@@ -37,6 +37,8 @@ mediate(
 
 \item{treat_lv}{Value of the treatment variable used as the treatment condition. Default is 1.}
 
+\item{control_lv}{Value of the treatment variable used as the control condition. Default is 0.}
+
 \item{incint}{A vector of boolean specifying if the exposure-mediator interactions are included into the outcome model. Default is NULL.}
 
 \item{inc_mmint}{A boolean value specifying if the mediator-mediator interactions are included. Default is FALSE.}
@@ -49,7 +51,7 @@ mediate(
 
 \item{complete_analysis}{Multiple imputation will be used to fill in missing value. Setting this flag to FALSE will force the analysis to be conducted on complete data.}
 
-\item{contron_lv}{Value of the treatment variable used as the control condition. Default is 0.}
+\item{digits}{Number of digits shown in the HTML report.}
 }
 \value{
 \code{mediate} generates a report in HTML format based on results from the mediation analysis. This report is saved in the working directory.
@@ -77,11 +79,11 @@ but included mediator 1 as a predictor.}
 across all imputed datasets. If there is no missing data, it contains lists of draws for the direct and indirect effect and relevant estimates from each of the simulation. }
 \item{direct}{Element of the \code{combined} list. A vector of estimates of direct effect from all simulations in all imputed datasets. If multiple imputation is not performed,
 it is a list of estimates of direct effect from all simulations.}
-\item{indirect1, indirect2, indirect 3}{Element of the \code{combined} list. A vector of draws of indirect effect through mediator 1, 2 and 3 from all simulations in all imputed datasets.
+\item{indirect}{Element of the \code{combined} list. A list containing vectors of draws of indirect effect through mediator 1, 2 and 3 from all simulations in all imputed datasets.
 If multiple imputation is not performed, it is a list of estimates of direct effect from all simulations.}
 \item{total}{Element of the \code{combined} list. A vector of draws of total effect of exposure from all simulations in all imputed datasets.
 If multiple imputation is not performed, it is a list of estimates of direct effect from all simulations.}
-\item{prop1, prop2, prop3}{Element of the \code{combined} list. Vectors of draws of proportion of effects mediated through mediator 1, 2 and 3 from all simulations in all imputed datasets.
+\item{prop}{Element of the \code{combined} list. A list containing vectors of draws of proportion of effects mediated through mediator 1, 2 and 3 from all simulations in all imputed datasets.
 If multiple imputation is not performed, it is a list of estimates of direct effect from all simulations.}
 \item{interaction}{Element of the \code{combined} list. Only available when there are two mediators. A vector of draws of effect mediated through the interaction between mediators from all simulations in all imputed datasets.
 If multiple imputation is not performed, it is a list of estimates of direct effect from all simulations.}
@@ -97,10 +99,14 @@ If multiple imputation is not performed, it is a list of estimates of direct eff
 Performing mediation analysis based on the interventional effect
 }
 \examples{
-med_res <- mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int", c = c("conflict","gender"),
-ymodel = "logistic regression", mmodel = c("logistic regression","logistic regression"), treat_lv = 1, control_lv = 0,
-data = substance, sim = 1000, digits = 3)
 
-med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression", mmodel = c("regression"), treat_lv = 1,
-control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = sim_data, sim = 10000, digits = 3)
+med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression",
+mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE,
+conf.level = 0.9, data = sim_data, sim = 20, digits = 3)
+
+med_res <- mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int",
+c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression",
+"logistic regression"), treat_lv = 1, control_lv = 0, conf.level = 0.9,
+data = substance, sim = 20, digits = 3)
+
 }

@@ -20,7 +20,7 @@ empirical_pvalue <- function(vec) {
 }
 
 validate_input <- function(y, med, treat, mod, c, ymodel, mmodel, treat_lv, control_lv, incint, inc_mmint, data, sim, conf.level, out_scale, complete_analysis, digits) {
-
+  tmp <- NULL
   search_term = paste0("^",y,"$")
   if (sum(stringr::str_detect(names(data), search_term)) != 1) {
     stop("The outcome variable does not exist in the dataset. Check the variable name.")
@@ -56,6 +56,7 @@ validate_input <- function(y, med, treat, mod, c, ymodel, mmodel, treat_lv, cont
   }
 
   if (ymodel == "logistic regression") {
+
     expr = parse(text = paste0("tmp <- is.factor(data$",y,")"))
     eval(expr)
     if (tmp) {

@@ -13,7 +13,7 @@ mi_prepare_impute <- function(fo, data, maxit = 20) {
     search_term <- stringr::str_c("(^",DV,":)|(:",DV,":)|(:", DV, "$)|(^",DV,"$)")
     IVs <- fo_term_labels[!stringr::str_detect(fo_term_labels, search_term)]
     IVs <- paste0(IVs, collapse = " + ")
-    tmp_formula <- as.formula(paste0(DV, " ~ " ,IVs))
+    tmp_formula <- stats::as.formula(paste0(DV, " ~ " ,IVs))
     mi_formulas <- c(mi_formulas, tmp_formula)
   }
 

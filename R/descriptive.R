@@ -24,6 +24,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
         eval(parse(text = paste0("tmp <- levels(df$", group[[i]],")")))
         tmp1 <- grouping_combo
         for (j in seq_along(tmp)) {
+          tmp2 <- NULL
           expr <- parse(text = paste("tmp2 <- tibble::add_column(tmp1,", group[[i]]," = tmp[[j]])"))
           eval(expr)
           if (j == 1) {
@@ -55,7 +56,7 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
           selection = paste(selection, tmp, sep = " & ")
         }
       }
-
+      subdf <- NULL
       expr <- parse(text = paste0("subdf <- df[", selection, ", !(names(df) %in% names(grouping_combo))]"))
 
       eval(expr)
@@ -65,8 +66,8 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
         Variables <- colnames(dfnumeric)
         N_list[[k]] <- nrow(dfnumeric) - sapply(lapply(dfnumeric, is.na), sum)
         Mean_list[[k]] <- format(round(sapply(dfnumeric, mean, na.rm = TRUE), digits), nsmall = digits)
-        SD_list[[k]] <- format(round(sapply(dfnumeric, sd, na.rm = TRUE), digits), nsmall = digits)
-        Median_list[[k]] <- format(round(sapply(dfnumeric, median, na.rm = TRUE), digits), nsmall = digits)
+        SD_list[[k]] <- format(round(sapply(dfnumeric, stats::sd, na.rm = TRUE), digits), nsmall = digits)
+        Median_list[[k]] <- format(round(sapply(dfnumeric, stats::median, na.rm = TRUE), digits), nsmall = digits)
         IQR_list[[k]] <- format(round(sapply(dfnumeric, stats::IQR, na.rm = TRUE), digits), nsmall = digits)
       }
 
@@ -148,8 +149,8 @@ descriptive <- function(data, digits = 2, group = NULL, complete = FALSE, ...) {
       Variables <- colnames(dfnumeric)
       N <- nrow(dfnumeric) - sapply(lapply(dfnumeric, is.na), sum)
       Mean <- format(round(sapply(dfnumeric, mean, na.rm = TRUE), digits), nsmall = digits)
-      SD <- format(round(sapply(dfnumeric, sd, na.rm = TRUE), digits), nsmall = digits)
-      Median <- format(round(sapply(dfnumeric, median, na.rm = TRUE), digits), nsmall = digits)
+      SD <- format(round(sapply(dfnumeric, stats::sd, na.rm = TRUE), digits), nsmall = digits)
+      Median <- format(round(sapply(dfnumeric, stats::median, na.rm = TRUE), digits), nsmall = digits)
       IQR <- format(round(sapply(dfnumeric, stats::IQR, na.rm = TRUE), digits), nsmall = digits)
 
       html_output <- "<br/><b>Table. Descriptive statistics of continuous variables</b><br/>"
