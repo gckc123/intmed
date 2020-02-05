@@ -110,11 +110,16 @@ gen_med_reg_html <- function(res_df, y, med, treat, c, ymodel, mmodel, incint = 
 
   html_output = c(html_output, "</table>")
   html_output = c(html_output, "***<i>p</i> <.001;**<i>p</i> <.01;*<i>p</i> <.05. <br/>")
+  html_output = c(html_output, "<br/>Reference<br/>Rubin DB. Multiple imputation for nonresponse in surveys. New York: John Wiley & Sons; 2009.")
+  html_output = c(html_output, "<br/>Buuren Sv, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. Journal of statistical software. 2010:1-68.")
+  html_output = c(html_output, "<br/>Vansteelandt S, Daniel RM. Interventional effects for mediation analysis with multiple mediators. Epidemiology (Cambridge, Mass). 2017; 28(2):258.")
+  html_output = c(html_output, "<br/>Chan GCK, Leung J. Causal mediation analysis using the interventional effect approach. A refined definition and software implementation in R. Paper under review. 2020.")
+
   return(html_output)
 }
 
-gen_med_table_html <- function(med_res, med, conf.level = 0.95, digits = 2) {
-  res_des = paste0("<br/><h4><u>Mediation analysis</u></h4>Mediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020) with ",length(med_res$direct), " simulations. <br/> Results from the mediation analysis indicated that <ul>")
+gen_med_table_html <- function(med_res, med, conf.level = 0.95, digits = 2, sim) {
+  res_des = paste0("<br/><h4><u>Mediation analysis</u></h4>Mediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020) with ",sim, " simulations. <br/> Results from the mediation analysis indicated that <ul>")
   alpha_level = 1-conf.level
   html_output = "<br/><b>Table. Mediation analysis results.</b><br/>"
   html_output = c(html_output, "<table style = \"text-align: left;border-bottom: 1px solid black; border-top: 1px solid black;\" cellspacing=\"0\" cellpadding = \"2\">")

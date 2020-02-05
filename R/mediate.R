@@ -16,16 +16,39 @@
 #' @param conf.level A numerical value specifying the confidence interval the the estimates. Default is 0.95
 #' @param complete_analysis Multiple imputation will be used to fill in missing value. Setting this flag to FALSE will force the analysis to be conducted on complete data.
 #' @param digits Number of digits shown in the HTML report.
+#' @param HTML_report A boolean specifying if the HTML will be saved in the R working directory.
 #' @examples
 #'
+#' #One mediator, no HTML report.
+#' #Set HTML_report = TRUE if a HTML report is needed.
+#' med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression",
+#' mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = FALSE, inc_mmint = FALSE,
+#' conf.level = 0.9, data = sim_data, sim = 20, complete_analysis = TRUE,
+#' HTML_report = FALSE, digits = 3)
+#'
+#' \donttest{
+#' #One mediator with exposure-mediator interaction
+#' #Results presented in a HTML report (This is the default).
 #' med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression",
 #' mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE,
-#' conf.level = 0.9, data = sim_data, sim = 20, digits = 3)
+#' conf.level = 0.9, data = sim_data, sim = 1000, complete_analysis = TRUE, digits = 3)
+#' }
 #'
+#' #Two mediators, complete data analysis and no HTML report.
 #' med_res <- mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int",
 #' c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression",
 #' "logistic regression"), treat_lv = 1, control_lv = 0, conf.level = 0.9,
-#' data = substance, sim = 20, digits = 3)
+#' data = substance, sim = 20, complete_analysis = TRUE,
+#' HTML_report = FALSE, digits = 3)
+#'
+#' \donttest{
+#' #Two mediators with multiple imputation (missing data are imputed by default)
+#' #Results presented in a HTML report.
+#' med_res <- mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int",
+#' c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression",
+#' "logistic regression"), treat_lv = 1, control_lv = 0, conf.level = 0.9,
+#' data = substance, sim = 1000, digits = 3)
+#' }
 #'
 #' @return \code{mediate} generates a report in HTML format based on results from the mediation analysis. This report is saved in the working directory.
 #' The followings will returned by \code{mediate}
@@ -70,7 +93,7 @@
 
 
 #' @export
-mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, complete_analysis = FALSE, digits = 2) {
+mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, complete_analysis = FALSE, digits = 2, HTML_report = TRUE) {
 
   #mod is set to NULL - Future work will incorporate this as parameters to allow moderated mediation analysis.
   mod = NULL
@@ -83,8 +106,6 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
   fo_vars <- base::all.vars(y_modelformula)
   data <- extract_analysis_vars(data, y_modelformula)
   data <- char2fac(data)
-
-  descriptive_html <- descriptive(data = data, digits = digits, complete = complete_analysis)
 
   max_missing_perc <- sum(ifelse(rowSums(as.data.frame(lapply(data, is.na))) == 0, 0 ,1))/nrow(data)*100
 
@@ -208,15 +229,19 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     results$model_summary <- gen_med_reg_table(y_res = results$individual$ymodel, m_res = m_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
   }
 
+  descriptive_html <- descriptive(data = data, digits = digits, complete = complete_analysis)
   model_summary_html <- gen_med_reg_html(results$model_summary, y = y, med = med, treat = treat, c = c, ymodel = ymodel, mmodel = mmodel, incint = incint, inc_mmint = inc_mmint, conf.level, data_head = utils::head(data, 1), treat_lv = treat_lv, control_lv = control_lv)
-  mediation_res_html <- gen_med_table_html(med_res = results$combined, med = med, conf.level = conf.level, digits = digits)
+  mediation_res_html <- gen_med_table_html(med_res = results$combined, med = med, conf.level = conf.level, digits = digits, sim = sim)
 
   tmp_text <- paste0("<h4><u>Descriptive statistics</u></h4> The table below shows the descriptive statistics of all analyses variables. The overall sample size is ",nrow(data),". ")
+  mi_statement <- NULL
   if (max_missing_perc > 0) {
     if (complete_analysis == TRUE) {
-      tmp_text <- paste(tmp_text, "There were ", round(max_missing_perc,2),"% cases with missing data. Complete case analysis wass used for the subsequent mediation analysis.")
+      mi_statement <- paste0("There were ", round(max_missing_perc,2),"% cases with missing data. Complete case analysis wass used for the subsequent mediation analysis.")
+      tmp_text <- paste(tmp_text, mi_statement)
     }else {
-      tmp_text <- paste(tmp_text, "There were ", round(max_missing_perc,2),"% cases with missing data. Multiple imputation was used to impute missing data (Rubin, 2004) and ", mi_prepare_obj$m, "datasets were imputed using the R package MICE (van Buuren, 2011).")
+      mi_statement <- paste0("There were ", round(max_missing_perc,2),"% cases with missing data. Multiple imputation was used to impute missing data (Rubin, 2009) and ", mi_prepare_obj$m, " datasets were imputed using the R package MICE (van Buuren, 2010).")
+      tmp_text <- paste(tmp_text, mi_statement)
     }
   }
   tmp_text <- paste(tmp_text, "<br/>")
@@ -227,10 +252,69 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
 
   results$res_html <- c(results$res_html, mediation_res_html)
 
-  sink("res.html")
-  cat(results$res_html)
-  sink()
-  shell.exec("res.html")
+  if (HTML_report) {
+    sink("res.html")
+    cat(results$res_html)
+    sink()
+    #shell.exec(res.html)
+  }
+
+  cat(paste0("\n\n",mi_statement,"\n"))
+  cat("\nThe table below shows the estimates from the key regression models for the mediation analysis.\n\n")
+
+  print(results$model_summary)
+  med_res_df = data.frame(effect = character(),
+                          est = character(),
+                          ci = character(),
+                          p = numeric(),
+                          stringsAsFactors = FALSE
+  )
+  tmp = data.frame(med_res_df)
+  for (i in 1:length(results$combined$indirect)) {
+    tmp[1,1] <- paste0("indirect effect through mediator ",i)
+    tmp[1,2] <- format(round(mean(results$combined$indirect[[i]]), digits = digits), nsmall = digits)
+    tmp[1,3] <- paste0("(",paste(format(round(stats::quantile(results$combined$indirect[[i]], c((1-conf.level)/2,1-(1-conf.level)/2)), digits = digits), nsmall = digits), collapse = ", "),")")
+    tmp[1,4] <- format(round(empirical_pvalue(results$combined$indirect[[i]]), digits = 3), nsmall = 3)
+    med_res_df <- rbind(med_res_df,tmp)
+  }
+  if (!is.null(results$combined$interaction)) {
+    tmp[1,1] <- "indirect effect through interaction between mediators"
+    tmp[1,2] <- format(round(mean(results$combined$interaction), digits = digits), nsmall = digits)
+    tmp[1,3] <- paste0("(",paste(format(round(stats::quantile(results$combined$interaction, c((1-conf.level)/2,1-(1-conf.level)/2)), digits = digits), nsmall = digits), collapse = ", "),")")
+    tmp[1,4] <- format(round(empirical_pvalue(results$combined$interaction), digits = 3), nsmall = 3)
+    med_res_df <- rbind(med_res_df, tmp)
+  }
+  if (!is.null(results$combined$dependence)) {
+    tmp[1,1] <- "indirect effect through dependence between mediators"
+    tmp[1,2] <- format(round(mean(results$combined$dependence), digits = digits), nsmall = digits)
+    tmp[1,3] <- paste0("(",paste(format(round(stats::quantile(results$combined$dependence, c((1-conf.level)/2,1-(1-conf.level)/2)), digits = digits), nsmall = digits), collapse = ", "),")")
+    tmp[1,4] <- format(round(empirical_pvalue(results$combined$dependence), digits = 3), nsmall = 3)
+    med_res_df <- rbind(med_res_df, tmp)
+  }
+  tmp[1,1] <- "direct effect"
+  tmp[1,2] <- format(round(mean(results$combined$direct), digits = digits), nsmall = digits)
+  tmp[1,3] <- paste0("(",paste(format(round(stats::quantile(results$combined$direct, c((1-conf.level)/2,1-(1-conf.level)/2)), digits = digits), nsmall = digits), collapse = ", "),")")
+  tmp[1,4] <- format(round(empirical_pvalue(results$combined$direct), digits = 3), nsmall = 3)
+  med_res_df <- rbind(med_res_df, tmp)
+  tmp[1,1] <- "total effect"
+  tmp[1,2] <- format(round(stats::median(results$combined$total), digits = digits), nsmall = digits)
+  tmp[1,3] <- paste0("(",paste(format(round(stats::quantile(results$combined$total, c((1-conf.level)/2,1-(1-conf.level)/2)), digits = digits), nsmall = digits), collapse = ", "),")")
+  tmp[1,4] <- format(round(empirical_pvalue(results$combined$total), digits = 3), nsmall = 3)
+  med_res_df <- rbind(med_res_df, tmp)
+  for (i in 1:length(results$combined$prop)) {
+    tmp[1,1] <- paste0("proportion of effect through mediator ",i)
+    tmp[1,2] <- format(round(stats::median(results$combined$prop[[i]]), digits = digits), nsmall = digits)
+    tmp[1,3] <- ""
+    tmp[1,4] <- ""
+    med_res_df <- rbind(med_res_df,tmp)
+  }
+  cat(paste0("\n\nMediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020) with ", sim, " simulations.\n\n"))
+  print(med_res_df)
+  cat("\n\nReference\n")
+  cat("Rubin DB. Multiple imputation for nonresponse in surveys. New York: John Wiley & Sons; 2009.\n")
+  cat("Buuren Sv, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. Journal of statistical software. 2010:1-68.\n")
+  cat("Vansteelandt S, Daniel RM. Interventional effects for mediation analysis with multiple mediators. Epidemiology (Cambridge, Mass). 2017; 28(2):258.\n")
+  cat("Chan G, Leung J. Causal mediation analysis using the interventional effect approach. A refined definition and software implementation in R. Paper uner review. 2020.\n")
 
   return(results)
 

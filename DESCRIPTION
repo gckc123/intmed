@@ -3,7 +3,7 @@ Type: Package
 Title: An implementation of interventional effects for mediation analysis
 Version: 0.1.0
 Authors@R: person("Gary", "Chan", email = "c.chan4@uq.edu.au",
-  role = c("aut", "cre"))
+  role = c("aut", "cre","cph"))
 Description: Implementing the interventional effects for mediation analysis for up to 3 mediators.
     The methods used are based on VanderWeele, Vansteelandt and Robins (2014), 
     Vansteelandt and Daniel (2017) and Chan and Leung (2020).

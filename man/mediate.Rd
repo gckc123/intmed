@@ -19,7 +19,8 @@ mediate(
   sim = 1000,
   conf.level = 0.95,
   complete_analysis = FALSE,
-  digits = 2
+  digits = 2,
+  HTML_report = TRUE
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ mediate(
 \item{complete_analysis}{Multiple imputation will be used to fill in missing value. Setting this flag to FALSE will force the analysis to be conducted on complete data.}
 
 \item{digits}{Number of digits shown in the HTML report.}
+
+\item{HTML_report}{A boolean specifying if the HTML will be saved in the R working directory.}
 }
 \value{
 \code{mediate} generates a report in HTML format based on results from the mediation analysis. This report is saved in the working directory.
@@ -100,13 +103,35 @@ Performing mediation analysis based on the interventional effect
 }
 \examples{
 
+#One mediator, no HTML report.
+#Set HTML_report = TRUE if a HTML report is needed.
+med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression",
+mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = FALSE, inc_mmint = FALSE,
+conf.level = 0.9, data = sim_data, sim = 20, complete_analysis = TRUE,
+HTML_report = FALSE, digits = 3)
+
+\donttest{
+#One mediator with exposure-mediator interaction
+#Results presented in a HTML report (This is the default).
 med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression",
 mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE,
-conf.level = 0.9, data = sim_data, sim = 20, digits = 3)
+conf.level = 0.9, data = sim_data, sim = 1000, complete_analysis = TRUE, digits = 3)
+}
 
+#Two mediators, complete data analysis and no HTML report.
 med_res <- mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int",
 c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression",
 "logistic regression"), treat_lv = 1, control_lv = 0, conf.level = 0.9,
-data = substance, sim = 20, digits = 3)
+data = substance, sim = 20, complete_analysis = TRUE,
+HTML_report = FALSE, digits = 3)
+
+\donttest{
+#Two mediators with multiple imputation (missing data are imputed by default)
+#Results presented in a HTML report.
+med_res <- mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int",
+c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression",
+"logistic regression"), treat_lv = 1, control_lv = 0, conf.level = 0.9,
+data = substance, sim = 1000, digits = 3)
+}
 
 }
