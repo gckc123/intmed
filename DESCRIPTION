@@ -24,4 +24,7 @@ Imports:
     doParallel
 RoxygenNote: 7.0.1
 Suggests: 
-    testthat
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

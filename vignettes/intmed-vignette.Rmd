@@ -1,0 +1,34 @@
+---
+title: "intmed-vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{intmed-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The intmed is for conducting mediation analysis using the interventional effect approach. It is built upon the work by VanderWeele et al (2014), Vansteelandt and Daniel (2017) and Chan and Leung (2020). The indirect effect mediated through a mediator M is defined as the average difference in the potential outcome in the population when there is an intervention that shifts the distribution of the mediator from what would have realised from unexposed to exposed, while holding the exposure level constant as exposed. 
+
+Let $Y$, $A$, $M$, and $C$ be the outcome, exposure, mediator and covariates. With loss of generality, we further assumed that there are two expsoure level: $a^*$ as the unexposed condition and $a$ as the exposed condition. In terms of notation from the causal inference literature, we use the notation $Y_a$ to denote the value of the outcome that would have been observed if the exposure $A$ were set to $a$; $Y_a$ is referred to as a counterfactual because it represents the value of the outcome that would have been observed. The average causal effect of exposure in the population is defined as 
+$$\mathbb{E}(Y_a-Y_{a^*})$$.
+
+Similarly, we used the notation $M_a$ to denote the value of the mediator that would have been observed if the exposure $A$ were set to $a$. Furthermore, we use the notation $Y_{am}$ to denote the value of the outcome that would bave been observed when the exposure $A$ were set to $a$ and the mediaotr were set to $m$.
+
+In this vignette, we assume that there are two mediators, $M_1$ and $M_2$. It should be noted that this method is applicable to any number of mediators. The indirect effect through $M_1$ is defined as 
+$$\mathbb{E}\left[\sum_{m_1}\sum_{m_2}\mathbb{E}(Y_{am_1m_2}|c)\{\mathbb{P}(M_{1a}=m_1|c)-\mathbb{P}(M_{1a^*}=m_1|c)\}\mathbb{P}(M_{2a^*}=m_2|c)\right]$$
+The represents the average change in the outcome in the population if there were an interventional that shifts the distribution of the mediator $M_1$ frmo what would have been under non-exposure ($a^*$) to exposure ($a$), while fixing the exposure level at $a$ (exposure) and randonly assigning a value of $M_2$ drawn from the distribution of $M_{2a^*}$ (i.e. the distributino of $M_2$ under non-exposure) for each individual.
+
+The indirect effect through $M_2$ is defined as 
+$$\mathbb{E}\left[ \sum\limits_{{{m}_{1}}}{\sum\limits_{{{m}_{2}}}{\mathbb{E}}}({{Y}_{a{{m}_{1}}{{m}_{2}}}}|c)\{\mathbb{P}({{M}_{2a}}={{m}_{2}}|c)-\mathbb{P}({{M}_{2{{a}^{*}}}}={{m}_{2}}|c)\}\mathbb{P}({{M}_{1a}}={{m}_{1}}|c) \right]$$
+The direct effect of exposure is defined as 
+$$\mathbb{E}\left[\sum\limits_{{{m}_{1}}}{\sum\limits_{{{m}_{2}}}{\{\mathbb{E}(}}{{Y}_{a{{m}_{1}}{{m}_{2}}}}|c)-\mathbb{E}(Y_{a^*m_1m_2}|c)\}\mathbb{P}(M_{1a^*}=m_1, M_{2a^*}=m_2|c)\right]$$
+The difference between the average causal effect of exposure and the sum of the direct effect, indirect effect through $M_1$ and indirect effect through $M_2$ is the effect mediated through the dependence and/or interaction between the mediators.
+
+In intmed, the above effects are estimated using Monte Carlo simulation. The details of the estimation algorithm can be found in Chan and Leung (2020). Intmed can handle up to 3 mediators. Continous, binary and count outcome/mediators are modelled using linear regression, logistic regression and Poisson regression respectively.
