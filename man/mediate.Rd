@@ -57,7 +57,7 @@ mediate(
 
 \item{HTML_report}{A boolean specifying if the HTML will be saved in the R working directory.}
 
-\item{cores}{A numeric value specifying the number of cores to be used for the monte carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.}
+\item{cores}{A numeric value specifying the number of cores to be used for the Monte Carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.}
 }
 \value{
 \code{mediate} generates a report in HTML format based on results from the mediation analysis. This report is saved in the working directory.

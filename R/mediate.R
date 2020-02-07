@@ -17,7 +17,7 @@
 #' @param complete_analysis Multiple imputation will be used to fill in missing value. Setting this flag to FALSE will force the analysis to be conducted on complete data.
 #' @param digits Number of digits shown in the HTML report.
 #' @param HTML_report A boolean specifying if the HTML will be saved in the R working directory.
-#' @param cores A numeric value specifying the number of cores to be used for the monte carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.
+#' @param cores A numeric value specifying the number of cores to be used for the Monte Carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.
 #' @examples
 #'
 #' #One mediator, no HTML report.
