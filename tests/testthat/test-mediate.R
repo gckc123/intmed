@@ -11,7 +11,7 @@ set.seed(1234)
 data("sim_data", package = "intmed")
 tol = 0.006
 tol2 = 0.009
-med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = sim_data, sim = 5000, digits = 5, HTML_report = FALSE)
+med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = sim_data, sim = 5000, digits = 5, HTML_report = FALSE, cores = 2)
 
 test_that("Test using sim_data - 1 mediator", {
   skip_on_cran()

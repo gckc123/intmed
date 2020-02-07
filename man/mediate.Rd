@@ -20,7 +20,8 @@ mediate(
   conf.level = 0.95,
   complete_analysis = FALSE,
   digits = 2,
-  HTML_report = TRUE
+  HTML_report = TRUE,
+  cores = NULL
 )
 }
 \arguments{
@@ -55,6 +56,8 @@ mediate(
 \item{digits}{Number of digits shown in the HTML report.}
 
 \item{HTML_report}{A boolean specifying if the HTML will be saved in the R working directory.}
+
+\item{cores}{A numeric value specifying the number of cores to be used for the monte carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.}
 }
 \value{
 \code{mediate} generates a report in HTML format based on results from the mediation analysis. This report is saved in the working directory.
@@ -108,7 +111,7 @@ Performing mediation analysis based on the interventional effect
 med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression",
 mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = FALSE, inc_mmint = FALSE,
 conf.level = 0.9, data = sim_data, sim = 20, complete_analysis = TRUE,
-HTML_report = FALSE, digits = 3)
+HTML_report = FALSE, digits = 3, cores = 2)
 
 \donttest{
 #One mediator with exposure-mediator interaction
@@ -123,7 +126,7 @@ med_res <- mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam
 c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression",
 "logistic regression"), treat_lv = 1, control_lv = 0, conf.level = 0.9,
 data = substance, sim = 20, complete_analysis = TRUE,
-HTML_report = FALSE, digits = 3)
+HTML_report = FALSE, digits = 3, cores = 2)
 
 \donttest{
 #Two mediators with multiple imputation (missing data are imputed by default)

@@ -17,6 +17,7 @@
 #' @param complete_analysis Multiple imputation will be used to fill in missing value. Setting this flag to FALSE will force the analysis to be conducted on complete data.
 #' @param digits Number of digits shown in the HTML report.
 #' @param HTML_report A boolean specifying if the HTML will be saved in the R working directory.
+#' @param cores A numeric value specifying the number of cores to be used for the monte carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.
 #' @examples
 #'
 #' #One mediator, no HTML report.
@@ -24,7 +25,7 @@
 #' med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression",
 #' mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = FALSE, inc_mmint = FALSE,
 #' conf.level = 0.9, data = sim_data, sim = 20, complete_analysis = TRUE,
-#' HTML_report = FALSE, digits = 3)
+#' HTML_report = FALSE, digits = 3, cores = 2)
 #'
 #' \donttest{
 #' #One mediator with exposure-mediator interaction
@@ -39,7 +40,7 @@
 #' c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression",
 #' "logistic regression"), treat_lv = 1, control_lv = 0, conf.level = 0.9,
 #' data = substance, sim = 20, complete_analysis = TRUE,
-#' HTML_report = FALSE, digits = 3)
+#' HTML_report = FALSE, digits = 3, cores = 2)
 #'
 #' \donttest{
 #' #Two mediators with multiple imputation (missing data are imputed by default)
@@ -93,7 +94,7 @@
 
 
 #' @export
-mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, complete_analysis = FALSE, digits = 2, HTML_report = TRUE) {
+mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, complete_analysis = FALSE, digits = 2, HTML_report = TRUE, cores = NULL) {
 
   #mod is set to NULL - Future work will incorporate this as parameters to allow moderated mediation analysis.
   mod = NULL
@@ -121,7 +122,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     mi_prepare_obj <- mi_prepare_impute(y_modelformula, data)
     mids_obj <- mice::mice(data, formulas = mi_prepare_obj$formulas, m = mi_prepare_obj$m)
     for (i in 1:mi_prepare_obj$m) {
-      results$individual[[i]] = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = mice::complete(mids_obj, action = i), sim = sim, conf.level = conf.level, out_scale = out_scale)
+      results$individual[[i]] = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = mice::complete(mids_obj, action = i), sim = sim, conf.level = conf.level, out_scale = out_scale, cores = cores)
     }
     indirect_list <- list()
     prop_list <- list()
@@ -213,7 +214,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     }
     results$model_summary <- gen_med_reg_table(y_res = results$y_pooled_res, m_res = results$m_pooled_res, ymodel = ymodel, mmodel = mmodel, conf.level = conf.level, digits = digits)
   }else {
-    results$individual = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = data, sim = sim, conf.level = conf.level, out_scale = out_scale)
+    results$individual = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = data, sim = sim, conf.level = conf.level, out_scale = out_scale, cores = cores)
     for (i in 1:length(med)) {
       expr = parse(text = paste0("m_res[[i]] = results$individual$m",i,"_model"))
       eval(expr)
@@ -320,17 +321,19 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
 
 }
 
-medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data, sim = 1000, conf.level = 0.95, out_scale = "difference") {
+medi <- function(y, med , treat, mod = NULL, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = TRUE, data, sim = 1000, conf.level = 0.95, out_scale = "difference", cores = NULL) {
   data <- tibble::add_column(data, missing = rowSums(sapply(data, is.na)))
   data <- data[data$missing == 0, 1:length(data)-1]
   i = NULL
-  chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
-  if (nzchar(chk) && chk == "TRUE") {
-    # use 2 cores in CRAN/Travis/AppVeyor
-    no_cores <- 2L
-  } else {
-    # use all cores in devtools::test()
-    no_cores = parallel::detectCores() - 1
+  #chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+  #if (nzchar(chk) && chk == "TRUE") {
+  #  # use 2 cores in CRAN/Travis/AppVeyor
+  #  no_cores <- 2L
+  if (is.null(cores)) {
+    no_cores = ifelse(parallel::detectCores() == 1, 1, parallel::detectCores() - 1)
+  }else
+  {
+    no_cores = cores
   }
 
   #cl <- parallel::makeCluster(no_cores, outfile=paste0('./info_parallel.log'))
