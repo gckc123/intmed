@@ -66,12 +66,12 @@
 #' \item{prop1, prop2, prop3}{Elements of the \code{individual} list. Vector of draws for the proportion of effects mediated through mediator 1, 2 and 3.}
 #' \item{ymodel}{Element of the \code{individual} list. An object of the class \code{lm} or \code{glm}, a R object containing the fit and estimate of the outcome model.}
 #' \item{ymodel_te}{Element of the \code{individual} list. Similar to \code{ymodel}, but did not have the mediators as predictors in the model.}
-#' \item{m1_model, m2_model, m3_model}{Elements of the \code{individual} list. Objects of the class \code{lm} or \code{glm} contining the fit and estimates of the mediator models.}
+#' \item{m1_model, m2_model, m3_model}{Elements of the \code{individual} list. Objects of the class \code{lm} or \code{glm} containing the fit and estimates of the mediator models.}
 #' \item{m2_model_cond}{Element of the \code{individual} list. Only available when there are more than one mediator. Object of the class \code{lm} or \code{glm} similar to \code{m2_model},
 #' but included mediator 1 as a predictor.}
 #' \item{m3_model_cond_m1, m3_model_cond_m2, m3_model_cond_m1m2}{Element of the \code{individual} list. Only available where there are more than two mediators. Object of the class
 #' \code{lm} or \code{glm} similar to \code{m3_model}, but with mediator 1, mediator 2 and both as predictors respectively.}
-#' \item{combined}{If multiple imputation is used for the analysis, \code{combined} is a list containing estimates for the direct/indirect effect and relevant estimates from all simulatons
+#' \item{combined}{If multiple imputation is used for the analysis, \code{combined} is a list containing estimates for the direct/indirect effect and relevant estimates from all simulations
 #' across all imputed datasets. If there is no missing data, it contains lists of draws for the direct and indirect effect and relevant estimates from each of the simulation. }
 #' \item{direct}{Element of the \code{combined} list. A vector of estimates of direct effect from all simulations in all imputed datasets. If multiple imputation is not performed,
 #' it is a list of estimates of direct effect from all simulations.}
@@ -85,7 +85,7 @@
 #' If multiple imputation is not performed, it is a list of estimates of direct effect from all simulations.}
 #' \item{dependence}{Element of the \code{combined} list. Only available when there are two mediators. A vector of draws of effect mediated through the dependence between mediators from all simulations in all imputed dataset.
 #' If multiple imputation is not performed, it is a list of estimates of direct effect from all simulations.}
-#' \item{mids}{Only available if multiple imputation is used. This is the \code{mids} object from \code{mice}, the multiple imputation pacakge by Stef van Buuren.}
+#' \item{mids}{Only available if multiple imputation is used. This is the \code{mids} object from \code{mice}, the multiple imputation package by Stef van Buuren.}
 #' \item{y_pooled_res}{Only available if multiple imputation is used. This contains the pooled model estimates from the outcome model.}
 #' \item{m_pooled_res}{Only available if multiple imputation is used. This contains the pooled model estimates from the mediator model(s).}
 #' \item{model_summary}{This is a formatted table for the results from the mediator and outcome models.}
