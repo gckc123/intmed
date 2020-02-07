@@ -26,53 +26,53 @@ test_that("Test using sim_data - 1 mediator", {
 ###################################################
 # substance example - 2 mediators
 ###################################################
-tol = 0.006
-tol2 = 0.009
+#tol = 0.006
+#tol2 = 0.009
 
-data("substance", package = "intmed")
-med_res <- intmed::mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int", c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression","logistic regression"), treat_lv = 1, control_lv = 0, data = substance, sim = 1000, digits = 5, HTML_report = FALSE)
+#data("substance", package = "intmed")
+#med_res <- intmed::mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int", c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression","logistic regression"), treat_lv = 1, control_lv = 0, data = substance, sim = 1000, digits = 5, HTML_report = FALSE)
 
-test_that("Test using substance data - 2 mediators", {
-  skip_on_cran()
-  skip_on_travis()
-  expect_equal(mean(med_res$combined$direct), -0.05318 , tol)
-  expect_equal(mean(med_res$combined$indirect[[1]]), -0.01811, tol)
-  expect_equal(mean(med_res$combined$indirect[[2]]), -0.00622, tol)
-  expect_equal(mean(med_res$combined$total), -0.07670, tol)
-  expect_equal(median(med_res$combined$prop[[1]]), 0.22564, tol2)
-  expect_equal(median(med_res$combined$prop[[2]]), 0.07174, tol2)
-})
+#test_that("Test using substance data - 2 mediators", {
+#  skip_on_cran()
+#  skip_on_travis()
+#  expect_equal(mean(med_res$combined$direct), -0.05318 , tol)
+#  expect_equal(mean(med_res$combined$indirect[[1]]), -0.01811, tol)
+#  expect_equal(mean(med_res$combined$indirect[[2]]), -0.00622, tol)
+#  expect_equal(mean(med_res$combined$total), -0.07670, tol)
+#  expect_equal(median(med_res$combined$prop[[1]]), 0.22564, tol2)
+#  expect_equal(median(med_res$combined$prop[[2]]), 0.07174, tol2)
+#})
 
 ###################################################
 # simulating data - 3 mediator
 ###################################################
 
-tol = 0.09
+#tol = 0.09
 
-n = 10000
-x = runif(n)
-x = ifelse(x < 0.5, 0, 1)
+#n = 10000
+#x = runif(n)
+#x = ifelse(x < 0.5, 0, 1)
 
-c = rnorm(n,0,0.1)
+#c = rnorm(n,0,0.1)
 
-m1 = 0.2*x + rnorm(n, 0, 0.1) + 0.1*c
-m2 = 0.3*x + 0.9*m1 + rnorm(n, 0, 0.1) + 0.2*c
-m3 = 0.4*x + m1 + 1.1*m2 + rnorm(n, 0, 0.1) + 0.3*c
+#m1 = 0.2*x + rnorm(n, 0, 0.1) + 0.1*c
+#m2 = 0.3*x + 0.9*m1 + rnorm(n, 0, 0.1) + 0.2*c
+#m3 = 0.4*x + m1 + 1.1*m2 + rnorm(n, 0, 0.1) + 0.3*c
 
-y = 0.8*x + 0.5*m1 + 0.6*m2 + 0.7*m3 + rnorm(n, 0, 0.1) + 2 + 0.4*c
+#y = 0.8*x + 0.5*m1 + 0.6*m2 + 0.7*m3 + rnorm(n, 0, 0.1) + 2 + 0.4*c
 
-simdata <- data.frame(x,m1,m2,m3,y,c)
-med_res <- mediate(y = "y", med = c("m1","m2","m3"), treat = "x", c = "c", ymodel = "regression", mmodel = c("regression", "regression", "regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = simdata, sim = 5000, digits = 5)
+#simdata <- data.frame(x,m1,m2,m3,y,c)
+#med_res <- mediate(y = "y", med = c("m1","m2","m3"), treat = "x", c = "c", ymodel = "regression", mmodel = c("regression", "regression", "regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = simdata, sim = 5000, digits = 5)
 
-test_that("Test using simulated data - 3 mediators", {
-  skip_on_cran()
-  skip_on_travis()
-  expect_equal(mean(med_res$combined$direct), 0.8, tol)
-  expect_equal(mean(med_res$combined$indirect[[1]]), 0.1, tol)
-  expect_equal(mean(med_res$combined$indirect[[2]]), 0.288, tol)
-  expect_equal(mean(med_res$combined$indirect[[3]]), 0.7896, tol)
-  expect_equal(mean(med_res$combined$total), 1.9776, tol)
-})
+#test_that("Test using simulated data - 3 mediators", {
+#  skip_on_cran()
+#  skip_on_travis()
+#  expect_equal(mean(med_res$combined$direct), 0.8, tol)
+#  expect_equal(mean(med_res$combined$indirect[[1]]), 0.1, tol)
+#  expect_equal(mean(med_res$combined$indirect[[2]]), 0.288, tol)
+#  expect_equal(mean(med_res$combined$indirect[[3]]), 0.7896, tol)
+#  expect_equal(mean(med_res$combined$total), 1.9776, tol)
+#})
 
 
 ###################################################

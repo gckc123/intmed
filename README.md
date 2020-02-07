@@ -1,2 +1,2 @@
 # intmed
-An implementation of the interventional  effect for mediation analysis
+The intmed is for conducting mediation analysis using the interventional effect approach. It is built upon the work by VanderWeele et al (2014), Vansteelandt and Daniel (2017) and Chan and Leung (2020). The indirect effect mediated through a mediator M is defined as the average difference in the potential outcome in the population when there is an intervention that shifts the distribution of the mediator from what would have realised from unexposed to exposed, while holding the exposure level constant as exposed. 

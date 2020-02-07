@@ -23,6 +23,8 @@ Imports:
     foreach,
     doParallel
 RoxygenNote: 7.0.1
+Depends:
+    R (>= 3.6.0)
 Suggests: 
     testthat,
     knitr,
