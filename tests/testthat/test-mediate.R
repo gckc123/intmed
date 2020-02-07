@@ -9,8 +9,8 @@ set.seed(1234)
 ###################################################
 
 data("sim_data", package = "intmed")
-tol = 0.002
-tol2 = 0.003
+tol = 0.006
+tol2 = 0.009
 med_res <- mediate(y = "y", med = c("m"), treat = "x", ymodel = "regression", mmodel = c("regression"), treat_lv = 1, control_lv = 0, incint = TRUE, inc_mmint = FALSE, data = sim_data, sim = 5000, digits = 5, HTML_report = FALSE)
 
 test_that("Test using sim_data - 1 mediator", {
@@ -26,8 +26,8 @@ test_that("Test using sim_data - 1 mediator", {
 ###################################################
 # substance example - 2 mediators
 ###################################################
-tol = 0.002
-tol2 = 0.003
+tol = 0.006
+tol2 = 0.009
 
 data("substance", package = "intmed")
 med_res <- intmed::mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int", c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression","logistic regression"), treat_lv = 1, control_lv = 0, data = substance, sim = 1000, digits = 5, HTML_report = FALSE)
@@ -47,7 +47,7 @@ test_that("Test using substance data - 2 mediators", {
 # simulating data - 3 mediator
 ###################################################
 
-tol = 0.025
+tol = 0.09
 
 n = 10000
 x = runif(n)
