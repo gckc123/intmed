@@ -120,7 +120,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
 
   if (max_missing_perc > 0 & complete_analysis == FALSE) {
     mi_prepare_obj <- mi_prepare_impute(y_modelformula, data)
-    mids_obj <- mice::mice(data, formulas = mi_prepare_obj$formulas, m = mi_prepare_obj$m)
+    mids_obj <- mice::mice(data, formulas = mi_prepare_obj$formulas, m = mi_prepare_obj$m, printFlag = FALSE)
     for (i in 1:mi_prepare_obj$m) {
       results$individual[[i]] = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = mice::complete(mids_obj, action = i), sim = sim, conf.level = conf.level, out_scale = out_scale, cores = cores)
     }
