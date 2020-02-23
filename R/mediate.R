@@ -17,6 +17,7 @@
 #' @param complete_analysis Multiple imputation will be used to fill in missing value. Setting this flag to FALSE will force the analysis to be conducted on complete data.
 #' @param digits Number of digits shown in the HTML report.
 #' @param HTML_report A boolean specifying if the HTML will be saved in the R working directory.
+#' @param summary_report A boolean specifying if a summary report will be printed.
 #' @param cores A numeric value specifying the number of cores to be used for the Monte Carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.
 #' @examples
 #'
@@ -94,7 +95,7 @@
 
 
 #' @export
-mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, complete_analysis = FALSE, digits = 2, HTML_report = TRUE, cores = NULL) {
+mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, complete_analysis = FALSE, digits = 2, HTML_report = TRUE, summary_report = TRUE, cores = NULL) {
 
   #mod is set to NULL - Future work will incorporate this as parameters to allow moderated mediation analysis.
   mod = NULL
@@ -114,13 +115,17 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
   y_res = list()
   m_res = list()
 
+  summary_text = ""
+
   if (length(med) == 1) {
     inc_mmint = FALSE
   }
 
   if (max_missing_perc > 0 & complete_analysis == FALSE) {
     mi_prepare_obj <- mi_prepare_impute(y_modelformula, data)
+    message("Imputing missing data...")
     mids_obj <- mice::mice(data, formulas = mi_prepare_obj$formulas, m = mi_prepare_obj$m, printFlag = FALSE)
+    message("Performing mediation analysis...")
     for (i in 1:mi_prepare_obj$m) {
       results$individual[[i]] = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = mice::complete(mids_obj, action = i), sim = sim, conf.level = conf.level, out_scale = out_scale, cores = cores)
     }
@@ -260,10 +265,10 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     #shell.exec(res.html)
   }
 
-  cat(paste0("\n\n",mi_statement,"\n"))
-  cat("\nThe table below shows the estimates from the key regression models for the mediation analysis.\n\n")
+  summary_text <- paste0(summary_text, "\n\n",mi_statement,"\n")
+  summary_text <- paste0(summary_text, "\nThe table below shows the estimates from the key regression models for the mediation analysis.\n\n")
+  summary_text <- paste0(summary_text, paste(capture.output(print(results$model_summary)), collapse = "\n"))
 
-  print(results$model_summary)
   med_res_df = data.frame(effect = character(),
                           est = character(),
                           ci = character(),
@@ -309,13 +314,17 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     tmp[1,4] <- ""
     med_res_df <- rbind(med_res_df,tmp)
   }
-  cat(paste0("\n\nMediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020) with ", sim, " simulations.\n\n"))
-  print(med_res_df)
-  cat("\n\nReference\n")
-  cat("Rubin DB. Multiple imputation for nonresponse in surveys. New York: John Wiley & Sons; 2009.\n")
-  cat("Buuren Sv, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. Journal of statistical software. 2010:1-68.\n")
-  cat("Vansteelandt S, Daniel RM. Interventional effects for mediation analysis with multiple mediators. Epidemiology (Cambridge, Mass). 2017; 28(2):258.\n")
-  cat("Chan G, Leung J. Causal mediation analysis using the interventional effect approach. A refined definition and software implementation in R. Paper uner review. 2020.\n")
+  summary_text <- paste0(summary_text, paste0("\n\nMediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020) with ", sim, " simulations.\n\n"))
+  summary_text <- paste0(summary_text,paste(capture.output(print(med_res_df)), collapse = "\n"))
+  summary_text <- paste0(summary_text, "\n\nReference\n")
+  summary_text <- paste0(summary_text, "Rubin DB. Multiple imputation for nonresponse in surveys. New York: John Wiley & Sons; 2009.\n")
+  summary_text <- paste0(summary_text, "Buuren Sv, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. Journal of statistical software. 2010:1-68.\n")
+  summary_text <- paste0(summary_text, "Vansteelandt S, Daniel RM. Interventional effects for mediation analysis with multiple mediators. Epidemiology (Cambridge, Mass). 2017; 28(2):258.\n")
+  summary_text <- paste0(summary_text, "Chan G, Leung J. Causal mediation analysis using the interventional effect approach. A refined definition and software implementation in R. Paper uner review. 2020.\n")
+
+  if (summary_report) {
+    cat(summary_text)
+  }
 
   return(results)
 
