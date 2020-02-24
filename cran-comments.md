@@ -1,7 +1,8 @@
 ## Resubmission
-This is a resubmission. In this version I have:
-*Ship the CRAN template for the MIT license.
-*Have added DOIs to the given references. One of the reference (Chan and Leung, 2020) does not yet have a DOI because it is an unpublished manuscript.
+This is a resubmission. The issues raised were all addressed as follow.
+* Removed "An implementation of" from the title.
+* Wrote references in the form of authors (year) <doi:...>. One of the paper is an unpublished manuscript that is available on request.
+* Users can now use the parameter "summary_report" to disable the printing of the result summary (i.e. summary_report was set to TRUE by default; printing can be disabled by setting summary_report = FALSE).
 
 ## Test environments
 * local Windows 10, R 3.6.1
