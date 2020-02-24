@@ -7,6 +7,7 @@ This is a resubmission. The issues raised were all addressed as follow.
 ## Test environments
 * local Windows 10, R 3.6.1
 * local Ubuntu 18.04. R 3.6.2
+* local MacOS Mojave 10.14.5 R 3.6.1
 * win-builder.r-project.org
 
 ## R CMD check results
