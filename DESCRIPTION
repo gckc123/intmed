@@ -1,6 +1,6 @@
 Package: intmed
 Type: Package
-Title: Mediation Analysis using interventional effects
+Title: Mediation Analysis using Interventional Effects
 Version: 0.1.1
 Authors@R: person("Gary", "Chan", email = "c.chan4@uq.edu.au",
   role = c("aut", "cre","cph"))
