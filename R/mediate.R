@@ -92,6 +92,7 @@
 #' \item{m_pooled_res}{Only available if multiple imputation is used. This contains the pooled model estimates from the mediator model(s).}
 #' \item{model_summary}{This is a formatted table for the results from the mediator and outcome models.}
 #' \item{res_html}{This is the HTML code for the result report.}
+#' \item{summary_text}{This is the formatted text of the result summary.}
 
 
 #' @export
@@ -325,6 +326,8 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
   if (summary_report) {
     cat(summary_text)
   }
+
+  results$summary_text <- summary_text
 
   return(results)
 

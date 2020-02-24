@@ -21,6 +21,7 @@ mediate(
   complete_analysis = FALSE,
   digits = 2,
   HTML_report = TRUE,
+  summary_report = TRUE,
   cores = NULL
 )
 }
@@ -56,6 +57,8 @@ mediate(
 \item{digits}{Number of digits shown in the HTML report.}
 
 \item{HTML_report}{A boolean specifying if the HTML will be saved in the R working directory.}
+
+\item{summary_report}{A boolean specifying if a summary report will be printed.}
 
 \item{cores}{A numeric value specifying the number of cores to be used for the Monte Carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.}
 }
@@ -100,6 +103,7 @@ If multiple imputation is not performed, it is a list of estimates of direct eff
 \item{m_pooled_res}{Only available if multiple imputation is used. This contains the pooled model estimates from the mediator model(s).}
 \item{model_summary}{This is a formatted table for the results from the mediator and outcome models.}
 \item{res_html}{This is the HTML code for the result report.}
+\item{summary_text}{This is the formatted text of the result summary.}
 }
 \description{
 Performing mediation analysis based on the interventional effect

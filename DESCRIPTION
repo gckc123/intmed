@@ -1,7 +1,7 @@
 Package: intmed
 Type: Package
 Title: Mediation Analysis using interventional effects
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: person("Gary", "Chan", email = "c.chan4@uq.edu.au",
   role = c("aut", "cre","cph"))
 Description: Implementing the interventional effects for mediation analysis for up to 3 mediators.
@@ -22,7 +22,7 @@ Imports:
     tibble,
     foreach,
     doParallel
-RoxygenNote: 7.0.1
+RoxygenNote: 7.0.2
 Depends:
     R (>= 3.5.0)
 Suggests: 
