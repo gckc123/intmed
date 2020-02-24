@@ -268,7 +268,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
 
   summary_text <- paste0(summary_text, "\n\n",mi_statement,"\n")
   summary_text <- paste0(summary_text, "\nThe table below shows the estimates from the key regression models for the mediation analysis.\n\n")
-  summary_text <- paste0(summary_text, paste(capture.output(print(results$model_summary)), collapse = "\n"))
+  summary_text <- paste0(summary_text, paste(utils::capture.output(print(results$model_summary)), collapse = "\n"))
 
   med_res_df = data.frame(effect = character(),
                           est = character(),
@@ -316,7 +316,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     med_res_df <- rbind(med_res_df,tmp)
   }
   summary_text <- paste0(summary_text, paste0("\n\nMediation analysis was performed based on the counter-factual framework and the interventional effect (Vansteelandt and Daniel, 2017; Chan and Leung, 2020). The analysis was conducted in R using the intmed package (Chan and Leung, 2020) with ", sim, " simulations.\n\n"))
-  summary_text <- paste0(summary_text,paste(capture.output(print(med_res_df)), collapse = "\n"))
+  summary_text <- paste0(summary_text,paste(utils::capture.output(print(med_res_df)), collapse = "\n"))
   summary_text <- paste0(summary_text, "\n\nReference\n")
   summary_text <- paste0(summary_text, "Rubin DB. Multiple imputation for nonresponse in surveys. New York: John Wiley & Sons; 2009.\n")
   summary_text <- paste0(summary_text, "Buuren Sv, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. Journal of statistical software. 2010:1-68.\n")
