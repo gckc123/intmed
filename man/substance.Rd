@@ -4,7 +4,8 @@
 \name{substance}
 \alias{substance}
 \title{Fictitious family intervention data}
-\format{A data frame with 553 rows:
+\format{
+A data frame with 553 rows:
 \describe{
   \item{gender}{Gender of the participants, Male/Female.}
   \item{conflict}{Level of family conflict. Higher value represents higher level of conflict.}
@@ -12,7 +13,8 @@
   \item{sub_exp}{Experimentation with substance. 1: Yes; 0: No}
   \item{fam_int}{Participation in family intervention during adolescence. 1: Yes; 0: No}
   \item{sub_misuse}{Substance misuse in young adulthood. 1: Yes; 0: No}
-}}
+}
+}
 \usage{
 substance
 }

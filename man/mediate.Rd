@@ -22,7 +22,8 @@ mediate(
   digits = 2,
   HTML_report = TRUE,
   summary_report = TRUE,
-  cores = NULL
+  cores = NULL,
+  imputed_data = FALSE
 )
 }
 \arguments{
@@ -61,6 +62,8 @@ mediate(
 \item{summary_report}{A boolean specifying if a summary report will be printed.}
 
 \item{cores}{A numeric value specifying the number of cores to be used for the Monte Carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.}
+
+\item{imputed_data}{A boolean specifiying if the data is an imputed data in stacked format (with .imp and .id)}
 }
 \value{
 \code{mediate} generates a report in HTML format based on results from the mediation analysis. This report is saved in the working directory.

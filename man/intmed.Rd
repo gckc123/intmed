@@ -4,6 +4,3 @@
 \name{intmed}
 \alias{intmed}
 \title{intmed: A package for mediation analysis using the interventional effect approach}
-\description{
-intmed: A package for mediation analysis using the interventional effect approach
-}

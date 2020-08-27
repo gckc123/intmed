@@ -4,12 +4,14 @@
 \name{sim_data}
 \alias{sim_data}
 \title{A simulated dataset for demonstrating mediation analysis with a single mediator}
-\format{A data frame with 1000 rows:
+\format{
+A data frame with 1000 rows:
 \describe{
   \item{x}{Exposure variable}
   \item{m}{Mediator}
   \item{y}{Outcome}
-}}
+}
+}
 \usage{
 sim_data
 }
