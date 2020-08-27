@@ -335,7 +335,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
   summary_text <- paste0(summary_text, "Rubin DB. Multiple imputation for nonresponse in surveys. New York: John Wiley & Sons; 2009.\n")
   summary_text <- paste0(summary_text, "Buuren Sv, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. Journal of statistical software. 2010:1-68.\n")
   summary_text <- paste0(summary_text, "Vansteelandt S, Daniel RM. Interventional effects for mediation analysis with multiple mediators. Epidemiology (Cambridge, Mass). 2017; 28(2):258.\n")
-  summary_text <- paste0(summary_text, "Chan G, Leung J. Causal mediation analysis using the interventional effect approach. A refined definition and software implementation in R. Paper uner review. 2020.\n")
+  summary_text <- paste0(summary_text, "Chan G, Leung J. Causal mediation analysis using the interventional effect approach. A refined definition. Paper uner review. 2020.\n")
 
   if (summary_report) {
     cat(summary_text)
