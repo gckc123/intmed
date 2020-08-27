@@ -27,10 +27,10 @@ test_that("Test using sim_data - 1 mediator", {
 # substance example - 2 mediators
 ###################################################
 #tol = 0.006
-#tol2 = 0.009
+#tol2 = 0.0015
 
 #data("substance", package = "intmed")
-#med_res <- intmed::mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int", c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression","logistic regression"), treat_lv = 1, control_lv = 0, data = substance, sim = 1000, digits = 5, HTML_report = FALSE)
+#med_res <- intmed::mediate(y = "sub_misuse", med = c("dev_peer","sub_exp"), treat = "fam_int", c = c("conflict","gender"), ymodel = "logistic regression", mmodel = c("logistic regression","logistic regression"), treat_lv = 1, control_lv = 0, data = substance, sim = 1000, digits = 5, HTML_report = FALSE, cores = 2)
 
 #test_that("Test using substance data - 2 mediators", {
 #  skip_on_cran()
@@ -47,7 +47,7 @@ test_that("Test using sim_data - 1 mediator", {
 # simulating data - 3 mediator
 ###################################################
 
-#tol = 0.09
+#tol = 0.1
 
 #n = 10000
 #x = runif(n)
@@ -62,7 +62,7 @@ test_that("Test using sim_data - 1 mediator", {
 #y = 0.8*x + 0.5*m1 + 0.6*m2 + 0.7*m3 + rnorm(n, 0, 0.1) + 2 + 0.4*c
 
 #simdata <- data.frame(x,m1,m2,m3,y,c)
-#med_res <- mediate(y = "y", med = c("m1","m2","m3"), treat = "x", c = "c", ymodel = "regression", mmodel = c("regression", "regression", "regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = simdata, sim = 5000, digits = 5)
+#med_res <- mediate(y = "y", med = c("m1","m2","m3"), treat = "x", c = "c", ymodel = "regression", mmodel = c("regression", "regression", "regression"), treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data = simdata, sim = 5000, digits = 5, cores = 2)
 
 #test_that("Test using simulated data - 3 mediators", {
 #  skip_on_cran()
