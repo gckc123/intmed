@@ -19,7 +19,7 @@
 #' @param HTML_report A boolean specifying if the HTML will be saved in the R working directory.
 #' @param summary_report A boolean specifying if a summary report will be printed.
 #' @param cores A numeric value specifying the number of cores to be used for the Monte Carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.
-#' @param imputed_data A boolean specifiying if the data is an imputed data in stacked format (with .imp and .id)
+#' @param imputed_data A boolean specifiying if the data is an imputed data in long format. The dataset much contains .imp (to identify the imputed data) and .id (to identify each obversation in each imputed data).
 #' @examples
 #'
 #' #One mediator, no HTML report.
