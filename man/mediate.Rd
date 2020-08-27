@@ -63,7 +63,7 @@ mediate(
 
 \item{cores}{A numeric value specifying the number of cores to be used for the Monte Carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.}
 
-\item{imputed_data}{A boolean specifiying if the data is an imputed data in stacked format (with .imp and .id)}
+\item{imputed_data}{A boolean specifiying if the data is an imputed data in long format. The dataset much contains .imp (to identify the imputed data) and .id (to identify each observ3ation in each imputed data).}
 }
 \value{
 \code{mediate} generates a report in HTML format based on results from the mediation analysis. This report is saved in the working directory.
