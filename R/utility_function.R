@@ -4,10 +4,14 @@ char2fac <- function(data, ...) {
   return(df)
 }
 
-extract_analysis_vars <- function(data, fo, ...) {
+extract_analysis_vars <- function(data, fo, imputed_data = FALSE, ...) {
   df <- dplyr::as_tibble(data)
   fo_vars <- base::all.vars(fo)
-  df <- df[, fo_vars]
+  if (imputed_data == TRUE) {
+    df <- df[, c(fo_vars, ".imp", ".id")]
+  }else {
+    df <- df[, fo_vars]
+  }
   return(df)
 }
 

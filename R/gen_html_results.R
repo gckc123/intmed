@@ -221,6 +221,7 @@ extract_reg_table <- function(res, model, conf.level = 0.95, digits = 2) {
   if (class(res)[[1]] == "mipo") {
     table <- summary(res)
     table$ts <- stats::qt(half_alpha, table$df)
+    table$variables <- table$term
   }else if (class(res)[[1]] == "glm" | class(res)[[1]] == "lm"){
     table <- as.data.frame(summary(res)$coefficients)
     table$df <- res$df.residual
@@ -233,6 +234,7 @@ extract_reg_table <- function(res, model, conf.level = 0.95, digits = 2) {
       colnames(table)[which(colnames(table) == "Pr(>|z|)")] = "p.value"
       table$ts <- stats::qnorm(half_alpha)
     }
+    table$variables <- rownames(table)
   }
 
 
@@ -253,8 +255,6 @@ extract_reg_table <- function(res, model, conf.level = 0.95, digits = 2) {
 
 
   table$p.value <- format(round(table$p.value, 3), nsmall = 3)
-
-  table$variables <- rownames(table)
   table <- table[,c("variables","estimate","ci","p.value")]
   return(table)
 }

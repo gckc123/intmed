@@ -19,6 +19,7 @@
 #' @param HTML_report A boolean specifying if the HTML will be saved in the R working directory.
 #' @param summary_report A boolean specifying if a summary report will be printed.
 #' @param cores A numeric value specifying the number of cores to be used for the Monte Carlo simulation. If this is set to NULL (default), it will auto-detect the number of cores to be used.
+#' @param imputed_data A boolean specifiying if the data is an imputed data in stacked format (with .imp and .id)
 #' @examples
 #'
 #' #One mediator, no HTML report.
@@ -96,21 +97,28 @@
 
 
 #' @export
-mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, complete_analysis = FALSE, digits = 2, HTML_report = TRUE, summary_report = TRUE, cores = NULL) {
+mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, control_lv = 0, incint = NULL, inc_mmint = FALSE, data, sim = 1000, conf.level = 0.95, complete_analysis = FALSE, digits = 2, HTML_report = TRUE, summary_report = TRUE, cores = NULL, imputed_data = FALSE) {
 
   #mod is set to NULL - Future work will incorporate this as parameters to allow moderated mediation analysis.
   mod = NULL
   #out_scale is set to "difference" - Future work will allow output in ratio scale.
   out_scale = "difference"
 
-  validate_input(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = data, sim = sim, conf.level = conf.level, out_scale = out_scale, complete_analysis = complete_analysis, digits = digits)
+  #validate_input(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = data, sim = sim, conf.level = conf.level, out_scale = out_scale, complete_analysis = complete_analysis, digits = digits)
 
   y_modelformula <- build_ymodel_formula(y, med = med, treat = treat, ymodel = ymodel, data = data, c = c, mod = mod, incint = incint, inc_mmint = inc_mmint)
   fo_vars <- base::all.vars(y_modelformula)
-  data <- extract_analysis_vars(data, y_modelformula)
+
+  data <- extract_analysis_vars(data, y_modelformula, imputed_data)
   data <- char2fac(data)
 
-  max_missing_perc <- sum(ifelse(rowSums(as.data.frame(lapply(data, is.na))) == 0, 0 ,1))/nrow(data)*100
+  if (imputed_data == TRUE) {
+    tmpData <- data[data$.imp == 0,]
+    max_missing_perc <- sum(ifelse(rowSums(as.data.frame(lapply(tmpData, is.na))) == 0, 0 ,1))/nrow(tmpData)*100
+  }else {
+    max_missing_perc <- sum(ifelse(rowSums(as.data.frame(lapply(data, is.na))) == 0, 0 ,1))/nrow(data)*100
+  }
+
 
   results = list()
   y_res = list()
@@ -122,12 +130,18 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     inc_mmint = FALSE
   }
 
-  if (max_missing_perc > 0 & complete_analysis == FALSE) {
-    mi_prepare_obj <- mi_prepare_impute(y_modelformula, data)
-    message("Imputing missing data...")
-    mids_obj <- mice::mice(data, formulas = mi_prepare_obj$formulas, m = mi_prepare_obj$m, printFlag = FALSE)
+  if ((max_missing_perc > 0 & complete_analysis == FALSE) || (imputed_data == TRUE)) {
+
+    if (imputed_data == FALSE) {
+      mi_prepare_obj <- mi_prepare_impute(y_modelformula, data)
+      message("Imputing missing data...")
+      mids_obj <- mice::mice(data, formulas = mi_prepare_obj$formulas, m = mi_prepare_obj$m, printFlag = FALSE)
+    }else if (imputed_data == TRUE){
+      message("Using user supplied imputed data")
+      mids_obj <- mice::as.mids(data)
+    }
     message("Performing mediation analysis...")
-    for (i in 1:mi_prepare_obj$m) {
+    for (i in 1:mids_obj$m) {
       results$individual[[i]] = medi(y = y, med = med, treat = treat, mod = mod, c = c, ymodel = ymodel, mmodel = mmodel, treat_lv = treat_lv, control_lv = control_lv, incint = incint, inc_mmint = inc_mmint, data = mice::complete(mids_obj, action = i), sim = sim, conf.level = conf.level, out_scale = out_scale, cores = cores)
     }
     indirect_list <- list()
@@ -143,9 +157,9 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     prop3 = c()
     dependence = c()
     interaction = c()
-    total_sim = sim*mi_prepare_obj$m
+    total_sim = sim*mids_obj$m
 
-    for (i in 1:mi_prepare_obj$m) {
+    for (i in 1:mids_obj$m) {
       if (length(med) == 1) {
         direct = c(direct, results$individual[[i]]$direct)
         indirect1 = c(indirect1, results$individual[[i]]$indirect1)
@@ -199,7 +213,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
     }
     results$mids = mids_obj
 
-    for (i in 1:mi_prepare_obj$m) {
+    for (i in 1:mids_obj$m) {
       y_res[[i]] <- results$individual[[i]]$ymodel
       for (j in 1:length(med)) {
         if (i == 1) {
@@ -247,7 +261,7 @@ mediate <- function(y, med , treat, c = NULL, ymodel, mmodel, treat_lv = 1, cont
       mi_statement <- paste0("There were ", round(max_missing_perc,2),"% cases with missing data. Complete case analysis wass used for the subsequent mediation analysis.")
       tmp_text <- paste(tmp_text, mi_statement)
     }else {
-      mi_statement <- paste0("There were ", round(max_missing_perc,2),"% cases with missing data. Multiple imputation was used to impute missing data (Rubin, 2009) and ", mi_prepare_obj$m, " datasets were imputed using the R package MICE (van Buuren, 2010).")
+      mi_statement <- paste0("There were ", round(max_missing_perc,2),"% cases with missing data. Multiple imputation was used to impute missing data (Rubin, 2009) and ", mids_obj$m, " datasets were imputed using the R package MICE (van Buuren, 2010).")
       tmp_text <- paste(tmp_text, mi_statement)
     }
   }
